@@ -1,0 +1,6 @@
+# A dense correlation matrix, so the sixth invariant has something to refuse.
+# Not for merging. Every cell is a number, and nothing in the file says which
+# of the zeros anybody actually asserted.
+1.0,0.0,0.0
+0.0,1.0,0.0
+0.0,0.0,1.0
