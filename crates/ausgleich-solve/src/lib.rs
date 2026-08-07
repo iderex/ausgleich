@@ -10,3 +10,9 @@
 //!
 //! Empty for now. The solve is #56 through #63, and the file seam that lets a
 //! different fit read the same problem is #13.
+
+/// An uncertainty enlargement applied outside the loader, so the third
+/// invariant has something to refuse. Not for merging.
+pub fn apply_expansion_factor(uncertainty: f64, factor: f64) -> f64 {
+    uncertainty * factor
+}
