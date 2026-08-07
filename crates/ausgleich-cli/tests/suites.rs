@@ -10,13 +10,32 @@
 //! Everything about the split lives in this one file on purpose. The roster
 //! below is read three ways: to print what a run did not cover, to check the
 //! manifest still separates those targets, and to decide which test sources the
-//! loopback rule applies to. Split across files, the third reader would carry a
-//! second copy of the suite list, and the copy that drifts is the one that
-//! decides which files are exempt from a guard.
+//! rules on the default suite apply to. Split across files, the third reader
+//! would carry a second copy of the suite list, and the copy that drifts is the
+//! one that decides which files are exempt from a guard.
 //!
 //! What this file does not do is run the separated suites or measure them. It
 //! says they exist, that the default run did not cover them, and what asking
 //! for them costs.
+//!
+//! # The promise no machine here refuses
+//!
+//! Of the four promises named above, three are refused by a check in this file.
+//! **A test that opens a window is not one of them, and no check here is
+//! coming.** #96 is where that was argued and this is the sentence it asks for.
+//!
+//! Nothing in this tree can tell that a test drew something. A window is opened
+//! by a call into the host's graphical system, usually several layers inside a
+//! dependency, and there is no artefact here for a check to read that would
+//! distinguish a test that rendered to a file from one that put a window on a
+//! screen. The nearest available thing is a pattern over the names of graphical
+//! crates, which would be a list that goes stale the day a new one is
+//! published, and a list like that earns a green tick it has not paid for.
+//!
+//! So this one stays prose, and it stays prose deliberately rather than while
+//! somebody gets round to it. What holds it is the rule in #14 that anything
+//! which draws renders to a file, and the fact that nothing in this workspace
+//! draws at all yet.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -245,25 +264,8 @@ fn no_default_suite_test_binds_off_loopback() {
     // file is one of the files the scan reads, and spelling the literal here
     // would make the check refuse itself.
     let needle = format!("::bind{}", '(');
-    let mut scope = vec![":(glob)crates/*/tests/**/*.rs".to_string()];
-    for suite in SEPARATED {
-        scope.push(format!(":(exclude,glob)crates/*/tests/{}.rs", suite.target));
-    }
-    let scope_args: Vec<&str> = scope.iter().map(String::as_str).collect();
-
-    let mut args = vec!["ls-files", "--"];
-    args.extend_from_slice(&scope_args);
-    let listing = git(&args);
-    assert!(
-        !listing.trim().is_empty(),
-        "no default-suite test sources were found, so this check examined \
-         nothing and passed. The scope is {scope_args:?}."
-    );
-
-    let root = repo_root();
     let mut offenders: Vec<String> = Vec::new();
-    for path in listing.lines() {
-        let text = std::fs::read_to_string(root.join(path)).expect("a tracked test source reads");
+    for (path, text) in default_suite_sources() {
         let mut from = 0usize;
         while let Some(found) = text[from..].find(&needle) {
             let start = from + found;
@@ -284,6 +286,172 @@ fn no_default_suite_test_binds_off_loopback() {
          firewall dialog only an administrator can answer, and a suite that \
          needs a person is a suite that stops running."
     );
+}
+
+#[test]
+fn no_default_suite_test_writes_outside_a_temporary_directory() {
+    // #14 made enforceable, and #96 is where the gap this closes was written
+    // down. A test that writes into the checkout leaves the tree dirty for the
+    // next run, and a test that writes into a home directory or a system path
+    // leaves something behind on a machine somebody else is using. Both make a
+    // suite that passes once and fails afterwards, which is the slowest kind of
+    // failure to diagnose.
+    //
+    // Reads are not in scope, and that is the whole design. Several tests here
+    // read the tree on purpose, this one included. What is refused is a call
+    // that creates, writes, moves or deletes.
+    //
+    // What it can see and what it cannot. It reads the argument each writing
+    // call is given and accepts only a path that names a temporary-directory
+    // source in the source text. A path arriving in a variable is refused, for
+    // the reason the loopback rule refuses a computed address: it is exactly
+    // the case a reader cannot check. A write performed by a dependency, or
+    // through a handle obtained somewhere else, is outside what a pattern over
+    // this tree can reach.
+    //
+    // The needles are assembled for the reason the loopback one is: this file
+    // is one of the files the scan reads.
+    let open = '(';
+    let needles = [
+        format!("fs::write{open}"),
+        format!("File::create{open}"),
+        format!("fs::create_dir{open}"),
+        format!("fs::create_dir_all{open}"),
+        format!("fs::remove_file{open}"),
+        format!("fs::remove_dir_all{open}"),
+        format!("fs::rename{open}"),
+        format!("fs::copy{open}"),
+    ];
+    let mut offenders: Vec<String> = Vec::new();
+    for (path, text) in default_suite_sources() {
+        for needle in &needles {
+            let mut from = 0usize;
+            while let Some(found) = text[from..].find(needle.as_str()) {
+                let start = from + found;
+                let body_start = start + needle.len();
+                let argument = balanced_argument(&text[body_start..]);
+                if !is_temporary(argument) {
+                    let line = text[..start].lines().count();
+                    offenders.push(format!("{path}:{line}: {needle}{argument})"));
+                }
+                from = body_start;
+            }
+        }
+    }
+    assert!(
+        offenders.is_empty(),
+        "default-suite tests writing outside a temporary directory: \
+         {offenders:#?}. Build the path from std::env::temp_dir and say so in \
+         the source, or move the test into a separated suite. A test that \
+         writes into the checkout leaves the tree dirty for the run after it."
+    );
+}
+
+/// One tool that cannot do its job without a privileged account, and what it
+/// does.
+///
+/// The names are split in two and joined below, for the reason the other
+/// needles in this file are assembled: this file is one of the files the scan
+/// reads, and a name spelled out here would make the check refuse itself.
+const ELEVATION_TOOLS: &[(&str, &str, &str)] = &[
+    (
+        "net",
+        "sh",
+        "reconfigures the firewall or the network stack",
+    ),
+    ("sc", ".exe", "creates or controls a service"),
+    ("sch", "tasks", "registers a scheduled task"),
+    ("msi", "exec", "runs an installer"),
+    ("run", "as", "starts a process as another account"),
+    ("su", "do", "starts a process as another account"),
+    ("dev-", "certs", "writes to a certificate store"),
+];
+
+#[test]
+fn no_default_suite_test_shells_out_to_something_that_needs_elevation() {
+    // #14 made enforceable, and the other half of what #96 holds open. A test
+    // that needs a privileged account is a test that stops running, and on a
+    // machine with a person at it the prompt it raises steals their attention
+    // for a run they did not start.
+    //
+    // This refuses a shape and not a meaning, and the difference matters more
+    // here than for the other two rules in this file. It catches the tools
+    // somebody actually reaches for, named in the table above with what each
+    // one does. A program that asks for elevation under a name nobody listed
+    // walks straight through, and the table is a floor rather than a
+    // guarantee: it holds what has been thought of.
+    //
+    // The comparison is over lowercased text with a boundary on each side, so
+    // a tool name appearing inside a longer word is not a match.
+    let mut offenders: Vec<String> = Vec::new();
+    for (path, text) in default_suite_sources() {
+        let haystack = text.to_ascii_lowercase();
+        for (head, tail, what_it_does) in ELEVATION_TOOLS {
+            let name = format!("{head}{tail}");
+            let mut from = 0usize;
+            while let Some(found) = haystack[from..].find(&name) {
+                let start = from + found;
+                let end = start + name.len();
+                if is_standalone(&haystack, start, end) {
+                    let line = text[..start].lines().count() + 1;
+                    offenders.push(format!("{path}:{line}: {name}, which {what_it_does}"));
+                }
+                from = end;
+            }
+        }
+    }
+    assert!(
+        offenders.is_empty(),
+        "default-suite tests naming a tool that needs a privileged account: \
+         {offenders:#?}. A test that needs elevation is skipped and the skip is \
+         disclosed, never worked around, because the prompt it raises can only \
+         be answered by a person sitting at the machine."
+    );
+}
+
+/// Every tracked default-suite test source, with its text.
+///
+/// The separated suites are excluded, taken from the roster above rather than
+/// from a second list. It refuses to return nothing, so a scope that stops
+/// matching cannot be read by its callers as a tree with nothing to find.
+fn default_suite_sources() -> Vec<(String, String)> {
+    let mut scope = vec![":(glob)crates/*/tests/**/*.rs".to_string()];
+    for suite in SEPARATED {
+        scope.push(format!(":(exclude,glob)crates/*/tests/{}.rs", suite.target));
+    }
+    let scope_args: Vec<&str> = scope.iter().map(String::as_str).collect();
+    let mut args = vec!["ls-files", "--"];
+    args.extend_from_slice(&scope_args);
+    let listing = git(&args);
+    assert!(
+        !listing.trim().is_empty(),
+        "no default-suite test sources were found, so every check over them \
+         examined nothing and passed. The scope is {scope_args:?}."
+    );
+    let root = repo_root();
+    listing
+        .lines()
+        .map(|path| {
+            let text =
+                std::fs::read_to_string(root.join(path)).expect("a tracked test source reads");
+            (path.to_string(), text)
+        })
+        .collect()
+}
+
+/// Whether a match sits on its own rather than inside a longer word.
+fn is_standalone(haystack: &str, start: usize, end: usize) -> bool {
+    let before = haystack[..start].chars().next_back();
+    let after = haystack[end..].chars().next();
+    let is_word = |c: Option<char>| c.is_some_and(|c| c.is_ascii_alphanumeric() || c == '_');
+    !is_word(before) && !is_word(after)
+}
+
+/// Whether a path argument names a temporary directory in the source rather
+/// than somewhere else or somewhere computed.
+fn is_temporary(argument: &str) -> bool {
+    let text = argument.to_ascii_lowercase();
+    text.contains("temp_dir") || text.contains("tempdir")
 }
 
 /// The text between an opening parenthesis and the one that closes it.
