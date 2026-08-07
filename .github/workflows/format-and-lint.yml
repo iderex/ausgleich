@@ -1,0 +1,91 @@
+# Formatting and lint. Three checks, one per thing a machine can decide without
+# reading for meaning: the code formatter, the linter, and the formatter for
+# prose and configuration.
+#
+# The job ids are the check-run names, and no job sets `name:`, so a rule that
+# names `fmt`, `clippy` or `prettier` keeps matching. Renaming a job here
+# detaches it from any such rule silently and with a green tick.
+#
+# Runs on every branch as well as on pull requests. That is not redundancy: a
+# fixture branch proving one of these checks bites has to be able to red it
+# without opening a pull request against it.
+name: Formatting and lint
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+# A newer push on the same ref supersedes an in-flight run. These checks are
+# cheap and idempotent, and none of them publishes anything, so cancelling a
+# superseded run loses nothing.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No step pushes, so do not leave the token in .git/config.
+          persist-credentials: false
+      # No toolchain action. rust-toolchain.toml pins the version and names the
+      # components, and rustup on the runner honours it, so the compiler that
+      # judges the formatting here is the one a contributor has locally. An
+      # action that installs a toolchain would be a second answer to a question
+      # the tree already answers.
+      - name: Show the toolchain the pin resolved to
+        run: |
+          cargo --version
+          cargo fmt --version
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show the toolchain the pin resolved to
+        run: |
+          cargo --version
+          cargo clippy --version
+      # All targets, so tests and benches are linted too. A warning denied only
+      # in library code is a warning that lives in the test files instead.
+      - name: Lint with warnings denied
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  prettier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # This is where this repository differs from the board the gate was copied
+    # from. There a prettier check exists because web assets ship; nothing ships
+    # from here, so the prose formatter covers Markdown and JSON only and the
+    # code half is `fmt` above.
+    #
+    # The cost, stated rather than argued away: this is the one check that needs
+    # a runtime the rest of the tree does not carry. The version is exact, so a
+    # prettier release cannot change what this check means without an edit here,
+    # and no package manifest is added to a workspace that is otherwise pure
+    # Rust. What is not pinned is the tarball's hash; only its version is.
+    env:
+      PRETTIER_VERSION: "3.6.2"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check Markdown and JSON formatting
+        run: |
+          node --version
+          npx --yes "prettier@${PRETTIER_VERSION}" --version
+          npx --yes "prettier@${PRETTIER_VERSION}" --check "**/*.md" "**/*.json"

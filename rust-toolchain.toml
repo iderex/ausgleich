@@ -12,3 +12,7 @@
 
 [toolchain]
 channel = "1.97.0"
+# Named here rather than installed by a step in a workflow, so the formatter and
+# the linter a contributor runs are the ones the gate runs. Without this line
+# rustup installs whatever its profile happens to be, and the two can differ.
+components = ["rustfmt", "clippy"]
