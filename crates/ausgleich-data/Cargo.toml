@@ -12,6 +12,11 @@ publish.workspace = true
 # nothing about the solve, so a fixture for the solver can never need a
 # directory on disk to exist.
 [dependencies]
+# One dependency, and nothing else on this branch. time 0.1.45 carries
+# RUSTSEC-2020-0071, an open vulnerability, and its license and those of the
+# three crates it pulls in are all on the allowlist, so the advisory leg is what
+# moves.
+time = "=0.1.45"
 
 # Warnings are errors here too. The levels are the workspace ones, in
 # [workspace.lints] at the root, so this member does not carry its own copy and
