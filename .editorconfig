@@ -1,0 +1,29 @@
+# The editor half of .gitattributes. That file says what git stores; this one
+# says what an editor should write in the first place, so the two never
+# disagree and a contributor never has to find out which one won.
+#
+# Every rule here has a counterpart there. `end_of_line = lf` is `eol=lf`,
+# `charset = utf-8` is what `text` assumes, and `insert_final_newline` is what
+# keeps a one-line change from showing as two.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Two spaces, because that is what the workflow files in this tree already use
+# and what the formatter for these types will expect.
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+# Two spaces at the end of a line is a hard break in Markdown. Trimming them
+# changes what the document says, so this is the one place the rule is off, and
+# it is off for a reason rather than by omission.
+trim_trailing_whitespace = false

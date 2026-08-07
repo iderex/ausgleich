@@ -1,0 +1,45 @@
+# What git may do to a tracked file on the way in and on the way out.
+#
+# Settled now, while the tree is small, because it stops being a small file the
+# day the data directories fill up. A change of line-ending policy after a few
+# hundred data files exist is a diff touching every one of them, which nobody
+# can read and which hides any real correction that lands beside it.
+#
+# The policy is one sentence: everything is text, stored with line feeds, and
+# checked out with line feeds on every platform. `eol=lf` is what makes the
+# second half true regardless of the clone's `core.autocrlf`, and it is there
+# for Windows specifically. Without it a contributor with conversion enabled
+# sees every tracked text file reported as modified on a tree they have not
+# touched, which makes a real formatting defect indistinguishable from noise.
+#
+# On exact bytes. Normalisation is applied to everything here on purpose, and
+# that is a problem for one kind of test: a fixture that exists to prove a
+# parser refuses a malformed byte sequence is exactly the thing normalisation
+# silently repairs on the way into git. The rule is that such a fixture is
+# encoded in source, as bytes the compiler produces, rather than stored as a
+# file, and the reason is written next to it. Declaring `-text` for a fixture
+# directory would be the other way to do it and is deliberately not taken: it
+# moves the exactness into this file, where the test cannot see it, and a later
+# edit here would silently change what the test proves.
+#
+# A new extension gets a line below. The catch-all is the floor rather than the
+# answer, so an extension nobody declared is still normalised, and
+# `git check-attr text eol -- <path>` never answers `unspecified`.
+
+* text=auto eol=lf
+
+# Source and manifests.
+*.rs    text eol=lf
+*.toml  text eol=lf
+*.lock  text eol=lf
+
+# Prose and configuration.
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+
+# Files whose whole name is the extension.
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+.editorconfig  text eol=lf
