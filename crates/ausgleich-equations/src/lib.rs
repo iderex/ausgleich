@@ -7,3 +7,9 @@
 //!
 //! Empty for now. The registry itself is #49 and the equations that go in it are
 //! #50 through #55.
+
+/// A hand-written partial derivative in the linearisation path, so the fourth
+/// invariant has something to refuse. Not for merging.
+pub fn d_residual_d_rydberg(frequency: f64) -> f64 {
+    -frequency
+}
