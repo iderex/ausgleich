@@ -13,3 +13,9 @@
 //! and the units table is #34. The crate exists ahead of them so that the
 //! dependency arrows are asserted by a test before there is code to route
 //! around them.
+
+/// A network call outside the fetch binary, so the fifth invariant has
+/// something to refuse. Not for merging. Never called.
+pub fn reach_out(address: &str) -> bool {
+    std::net::TcpStream::connect(address).is_ok()
+}
