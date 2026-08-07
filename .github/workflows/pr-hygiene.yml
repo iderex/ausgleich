@@ -1,0 +1,248 @@
+# Deterministic checks on the shape of a change: what its commit subjects say,
+# what characters its messages are made of, and whether its pull-request body
+# was written or left as the template.
+#
+# The check-run name is the job's `name:` and it carries spaces, which a job id
+# cannot. It keeps the name it has on iderex/jellyfin-plugin-sso, because it is
+# the same check. The deviation from that board, in one line: that version also
+# enforces conventions tied to a release manifest, which does not exist here.
+#
+# Everything below is decided in this file rather than by an action, so what the
+# check means is readable in one place and widening it is a diff somebody has to
+# defend. That is the same argument the rest of this tree makes for putting a
+# floor in a manifest and a coverage number in a file.
+#
+# Runs on pushes to every branch as well as on pull requests, and the two are not
+# redundant. On a pull request the range is the one GitHub reports and the body
+# leg can run at all; on a push there is no body and the range is derived from
+# the default branch, which is what lets a fixture branch red this check without
+# opening a pull request.
+name: PR hygiene
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-hygiene:
+    name: Deterministic PR-hygiene checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history, because every leg walks a commit range. Nothing
+          # here pushes, so the token is not persisted.
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Every value out of the event payload arrives as an environment variable
+      # and is never interpolated into a shell or a script body. A branch name
+      # or a pull-request body is attacker-controlled text on a fork pull
+      # request, and interpolation is where such text becomes code.
+      - name: Decide the range and who is asking
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          THIS_REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+            head="$PR_HEAD_SHA"
+            # A pull request whose head lives in another repository is a
+            # contribution from outside this one.
+            if [ "$PR_HEAD_REPO" = "$THIS_REPO" ]; then from_outside=no; else from_outside=yes; fi
+          else
+            # On a push there is no reported base. The range is what this branch
+            # adds to the default branch, which is empty on the default branch
+            # itself and is then a run with nothing to judge rather than a
+            # failure.
+            head="$(git rev-parse HEAD)"
+            if git rev-parse --verify --quiet "origin/${DEFAULT_BRANCH}" >/dev/null; then
+              base="$(git merge-base "origin/${DEFAULT_BRANCH}" HEAD)"
+            else
+              echo "::error::origin/${DEFAULT_BRANCH} is not in this clone, so no range can be derived."
+              exit 1
+            fi
+            from_outside=no
+          fi
+          echo "base=${base}"
+          echo "head=${head}"
+          echo "from_outside=${from_outside}"
+          {
+            echo "BASE_SHA=${base}"
+            echo "HEAD_SHA=${head}"
+            echo "FROM_OUTSIDE=${from_outside}"
+          } >> "$GITHUB_ENV"
+
+      - name: Every commit subject carries its issue reference
+        run: |
+          set -euo pipefail
+          # git log and git blame show the subject and nothing else, so a
+          # reference that lives only in the body is a link a reader following a
+          # line back to its reason never sees.
+          #
+          # Guarded rather than substituted inside a `for` word list: a failure
+          # of the walk inside `$( )` does not trip `set -e`, and this leg would
+          # then pass with nothing examined.
+          if ! commits=$(git rev-list --no-merges "${BASE_SHA}..${HEAD_SHA}"); then
+            echo "::error::Could not walk ${BASE_SHA}..${HEAD_SHA}."
+            exit 1
+          fi
+          if [ -z "$commits" ]; then
+            echo "no non-merge commits in the range, so this leg examined nothing"
+            exit 0
+          fi
+          fail=0
+          for sha in $commits; do
+            subject=$(git show -s --format='%s' "$sha")
+            author_email=$(git show -s --format='%ae' "$sha")
+            # The same explicit bot allowlist dco.yml carries, and for the same
+            # reason: first-party automation cannot know an issue number. An
+            # allowlist of GitHub's own identities rather than a `[bot]` glob, so
+            # a person cannot self-exempt by crafting an author address.
+            case "$author_email" in
+              *"+dependabot[bot]@users.noreply.github.com" \
+              | "dependabot[bot]@users.noreply.github.com" \
+              | *"+github-actions[bot]@users.noreply.github.com" \
+              | "github-actions[bot]@users.noreply.github.com")
+                echo "skip  $sha (automation: $author_email)"; continue ;;
+            esac
+            if printf '%s' "$subject" | grep -qE '#[0-9]+'; then
+              echo "ok    $sha  $subject"
+            elif [ "$FROM_OUTSIDE" = "yes" ]; then
+              echo "exempt $sha  $subject"
+            else
+              echo "FAIL  $sha  $subject"
+              fail=1
+            fi
+          done
+          if [ "$FROM_OUTSIDE" = "yes" ]; then
+            echo "::notice::This change comes from outside this repository, so the issue-reference leg does not fail it. Somebody outside cannot know an issue number that does not exist yet. Nothing is owed here."
+            exit 0
+          fi
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::A commit subject carries no issue reference. Put the number in the subject, as '#123', so the link survives in git log and git blame, which show the subject and nothing else."
+            exit 1
+          fi
+
+      - name: Commit messages use only the characters in the table
+        env:
+          # THE TABLE. An allowlist rather than a list of forbidden characters,
+          # because only an allowlist also refuses the character nobody has
+          # thought of yet: a bidirectional override that makes a message read
+          # backwards, a zero-width joiner splicing two words, a homoglyph that
+          # is not the letter it looks like.
+          #
+          # What is allowed, and nothing else:
+          #
+          #   U+000A            line feed, the only line ending this tree stores
+          #   U+0020 - U+007E   space and the printable ASCII characters
+          #
+          # The cost, stated rather than argued away. A contributor whose name
+          # carries a diacritic cannot write it in a Signed-off-by trailer under
+          # this table. That is why the leg below is a note and not a failure for
+          # a change from outside this repository, and why widening the table is
+          # a deliberate edit to this block with the reason beside it rather than
+          # something anybody does in passing.
+          ALLOWED_DESCRIPTION: "U+000A, and U+0020 through U+007E"
+        run: |
+          set -euo pipefail
+          if ! commits=$(git rev-list --no-merges "${BASE_SHA}..${HEAD_SHA}"); then
+            echo "::error::Could not walk ${BASE_SHA}..${HEAD_SHA}."
+            exit 1
+          fi
+          if [ -z "$commits" ]; then
+            echo "no non-merge commits in the range, so this leg examined nothing"
+            exit 0
+          fi
+          fail=0
+          for sha in $commits; do
+            # python3 is on the runner image and is the smallest thing here that
+            # decodes UTF-8 and can name a code point. The message arrives on
+            # stdin rather than as an argument, so no part of it is ever parsed
+            # by a shell.
+            if git show -s --format='%B' "$sha" | python3 -c '
+import sys
+
+allowed = set([0x0A]) | set(range(0x20, 0x7F))
+text = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+bad = []
+for line_number, line in enumerate(text.split("\n"), start=1):
+    for column, character in enumerate(line, start=1):
+        point = ord(character)
+        if point not in allowed:
+            bad.append((line_number, column, point, character))
+for line_number, column, point, character in bad:
+    print(f"    line {line_number}, column {column}: U+{point:04X} {character!r}")
+sys.exit(1 if bad else 0)
+'; then
+              echo "ok    $sha"
+            else
+              echo "OUTSIDE THE TABLE  $sha"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            if [ "$FROM_OUTSIDE" = "yes" ]; then
+              echo "::notice::A commit message from outside this repository uses a character outside the table (${ALLOWED_DESCRIPTION}). Reported and not failed: a name is not a defect."
+              exit 0
+            fi
+            echo "::error::A commit message uses a character outside the table (${ALLOWED_DESCRIPTION}). The code point and the line are printed above. Rewrite the message, or widen the table in .github/workflows/pr-hygiene.yml with the reason beside it."
+            exit 1
+          fi
+
+      - name: The pull-request body is written rather than left as the template
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "NOT RUN: there is no pull-request body on a push event."
+            exit 0
+          fi
+          template=""
+          for candidate in \
+            .github/pull_request_template.md \
+            .github/PULL_REQUEST_TEMPLATE.md \
+            .github/PULL_REQUEST_TEMPLATE/pull_request_template.md
+          do
+            if [ -f "$candidate" ]; then template="$candidate"; break; fi
+          done
+          if [ -z "$template" ]; then
+            # A leg nobody can ask for says so, and says what asking would cost,
+            # rather than passing quietly and being read as a leg that ran.
+            echo "NOT RUN: this repository has no pull-request template."
+            echo "  What it would take: the template is part of #26, which depends on entry 1 of #16."
+            echo "  Until that file exists there is nothing for a body to be compared against,"
+            echo "  and a green tick here is not evidence that any body was written."
+            exit 0
+          fi
+          # Compared with the whitespace stripped from both, so a body that is
+          # the template plus a trailing newline is still the template.
+          body_normalised=$(printf '%s' "$PR_BODY" | tr -d '[:space:]')
+          template_normalised=$(tr -d '[:space:]' < "$template")
+          if [ -z "$body_normalised" ]; then
+            echo "::error::The pull-request body is empty. Everything about a change goes in its body."
+            exit 1
+          fi
+          if [ "$body_normalised" = "$template_normalised" ]; then
+            echo "::error::The pull-request body is the template, unchanged. Say what the change does and what evidence stands behind it."
+            exit 1
+          fi
+          echo "ok: the body differs from ${template}"
