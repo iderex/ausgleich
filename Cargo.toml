@@ -22,6 +22,17 @@ repository = "https://github.com/iderex/ausgleich"
 # without giving up the edition; higher would be a choice and would need a
 # reason written next to it.
 rust-version = "1.85.0"
+# Nothing here goes to a registry. It is not a decision about #16 entry 1, it is
+# what follows from that entry being open: cargo refuses to publish a crate with
+# no license, and a contributor asserting the Developer Certificate of Origin
+# asserts a right to submit under a project license that does not exist yet.
+#
+# It also does work in the gate. `deny` judges the licenses of everything in the
+# graph, and these five members have none, so the policy in deny.toml treats a
+# member that cannot be published as private and judges the dependencies
+# instead. Deciding entry 1 is what removes this line, and the check goes back
+# to judging our own crates the moment it is gone.
+publish = false
 
 # The members, named once, so a member depending on another writes
 # `workspace = true` and no path is repeated. Which of these edges are allowed is

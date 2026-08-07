@@ -5,6 +5,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
+# Inherited, and the reason is in the root manifest.
+publish.workspace = true
 
 # No workspace dependency at all, and that is the point of this crate's place in
 # the workspace. It is the crate that carries fixture tests and a mutation run,
