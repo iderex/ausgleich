@@ -205,12 +205,26 @@ fn no_suppression_attribute_without_a_reason_string() {
     // across lines, so a line-oriented pattern would pass exactly the
     // suppressions that are long enough to need explaining. The scan below finds
     // each attribute and reads to its closing bracket.
+    //
+    // The openers are assembled rather than written out, and that is not style.
+    // This file is one of the files the scan reads. Spelled literally, the four
+    // strings below would be four suppressions with no reason inside the check
+    // that refuses them, and the check would refuse itself. Written this way the
+    // sequence never appears in the source, so the file stays in scope instead
+    // of being excluded from its own rule.
+    let hash = '#';
+    let openers = [
+        format!("{hash}[allow("),
+        format!("{hash}![allow("),
+        format!("{hash}[expect("),
+        format!("{hash}![expect("),
+    ];
     let (_, listing) = git(&["ls-files", "--", ":(glob)crates/**/*.rs"]);
     let root = repo_root();
     let mut offenders: Vec<String> = Vec::new();
     for path in listing.lines() {
         let text = std::fs::read_to_string(root.join(path)).expect("a tracked source file reads");
-        for opener in ["#[allow(", "#![allow(", "#[expect(", "#![expect("] {
+        for opener in &openers {
             let mut from = 0usize;
             while let Some(found) = text[from..].find(opener) {
                 let start = from + found;
