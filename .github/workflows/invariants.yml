@@ -1,0 +1,51 @@
+# Properties a pattern over the tree can refuse, refused by a machine.
+#
+# The check keeps the name it has on the board this gate was copied from,
+# because it is the same idea. What the invariants are is written where they are
+# implemented, in crates/ausgleich-cli/tests/greppable_invariants.rs, one test
+# per invariant with its reason and its bound beside it. Listing them here as
+# well would be a second copy that drifts.
+#
+# The patterns are run by a test in the workspace rather than by a shell block
+# in this file. That is the means decision and it goes the way it does for one
+# reason: enforcement logic written in a workflow has no suite, so nothing proves
+# a pattern still bites after somebody edits it. As a test it is run by every
+# route that runs the suite, and each pattern has a branch that reds it.
+#
+# Runs on every branch as well as on pull requests, so those branches can red
+# this check without opening a pull request.
+name: Invariants
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The check-run name carries spaces, which a job id cannot, so this job sets
+  # `name:` for the same reason `msrv build` does.
+  invariants:
+    name: Enforce greppable invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The patterns run through `git grep`, so git has to be able to answer
+          # what is tracked. It needs no history beyond the commit under test.
+          persist-credentials: false
+
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+
+      - name: Refuse the invariants
+        run: cargo test --package ausgleich-cli --test greppable_invariants -- --nocapture
