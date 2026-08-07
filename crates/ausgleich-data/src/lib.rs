@@ -13,3 +13,12 @@
 //! and the units table is #34. The crate exists ahead of them so that the
 //! dependency arrows are asserted by a test before there is code to route
 //! around them.
+
+/// A lint-triggering line, so the clippy check has something to refuse.
+///
+/// clippy::len_zero: comparing a length against zero rather than asking
+/// whether the thing is empty. The one-character version of this mistake is
+/// real, because == 0 is what somebody writes before they know about is_empty.
+pub fn has_no_entries(entries: &[u8]) -> bool {
+    entries.len() == 0
+}
