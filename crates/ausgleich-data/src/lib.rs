@@ -9,7 +9,8 @@
 //! invisible from here, and the reverse holds too, so nothing in the solve path
 //! can come to depend on a directory existing.
 //!
-//! Empty for now. The record shapes are #30, #31 and #32, the manifest is #35,
-//! and the units table is #34. The crate exists ahead of them so that the
-//! dependency arrows are asserted by a test before there is code to route
-//! around them.
+//! What is here is the provenance block, #33, which is the part of every record
+//! that says where a number came from. The record shapes that carry it are #30,
+//! #31 and #32, the manifest is #35, and the units table is #34.
+
+pub mod provenance;

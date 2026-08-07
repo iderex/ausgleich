@@ -11,7 +11,14 @@ publish.workspace = true
 # No workspace dependency, in either direction with the solver. The loader knows
 # nothing about the solve, so a fixture for the solver can never need a
 # directory on disk to exist.
+#
+# One dependency from outside, and it is the reader for the format #4 decided
+# the data files are written in. Writing a reader here instead would put a
+# parser for somebody else's format in the crate whose job is the record shapes,
+# and #37 would then owe a fuzz target for a parser this project maintains
+# rather than for one it calls.
 [dependencies]
+toml = { version = "1.1.4", default-features = false, features = ["parse", "display", "serde"] }
 
 # Warnings are errors here too. The levels are the workspace ones, in
 # [workspace.lints] at the root, so this member does not carry its own copy and

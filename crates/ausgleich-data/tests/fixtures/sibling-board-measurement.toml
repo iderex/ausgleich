@@ -1,0 +1,48 @@
+# The same block describing a measurement from the domain the shape is shared
+# with rather than from this one. Invented in the same way and for the same
+# reason as the other fixture.
+#
+# What it is here to show, and it is #33's reason for asking for it. The block
+# says where a number came from and never what the number is, so a measurement
+# of a mass fraction in a reference material carries it as readily as a
+# measurement that enters a constants adjustment. Nothing below is a field bent
+# to fit.
+#
+# The one place the sharing could have failed is the method, because that is the
+# only closed vocabulary in the block. It does not fail here because the
+# vocabulary was written with terms from this domain in it, which is a property
+# of the vocabulary file rather than of this fixture, and the test that reads
+# both says so.
+#
+# It also differs from the other fixture in three ways that are not decoration:
+# the uncertainty is quoted at a coverage factor written as an integer rather
+# than with a decimal point, the kind is systematic rather than combined, and
+# the publication derived the value rather than measuring it.
+
+version = 1
+
+[publication]
+authors = ["Beispiel, D.", "Muster, E."]
+title = "A fixture standing in for a measurement of a mass fraction in a reference material"
+venue = "Report series of a national metrology institute"
+year = 2021
+doi = "10.0000/fixture-sibling-board-measurement"
+
+[read_from]
+locator = "Equation 6"
+page = 9
+
+[measurement]
+reported = 2020-06-30
+method = "isotope-dilution-mass-spectrometry"
+origin = "derived-by-the-publication"
+
+[uncertainty]
+kind = "systematic"
+coverage_factor = 2
+
+[digitisation]
+read_by = "Reader, C."
+read_on = 2026-02-11
+confirmed_by = "Checker, D."
+confirmed_on = 2026-02-14
