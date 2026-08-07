@@ -34,6 +34,25 @@ ausgleich-equations = { path = "crates/ausgleich-equations" }
 ausgleich-solve = { path = "crates/ausgleich-solve" }
 ausgleich-report = { path = "crates/ausgleich-report" }
 
+# Warnings are errors, declared here rather than as an argument the gate passes.
+#
+# In the manifest the rule reaches every route that compiles this workspace: the
+# gate, a contributor's `cargo build`, `cargo test`, `cargo clippy` and the floor
+# build. As `RUSTFLAGS=-D warnings` in one workflow it would reach that workflow
+# only, and a warning would be an error in the gate and a scrollable line
+# everywhere else, which is how a tree learns to ignore them.
+#
+# It is also narrower than the environment variable in the direction that
+# matters. `RUSTFLAGS` reaches dependency code as well, so the first crate this
+# workspace pulls in that carries a deprecation would fail a build for a warning
+# nobody here can fix. The lints table reaches the members and stops.
+#
+# `priority = -1` puts the group below any named lint, so a specific `allow`
+# with a reason beside it still wins. Denying the group with default priority
+# would make every such exception impossible to express.
+[workspace.lints.rust]
+warnings = { level = "deny", priority = -1 }
+
 [profile.release]
 # One codegen unit. Splitting a crate across units changes which calls the
 # optimiser can see across, so the count is an input to the code that comes out.
