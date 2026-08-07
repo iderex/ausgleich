@@ -1,0 +1,71 @@
+# The build, with the lockfile held still.
+#
+# The job id is `build` and no job here sets `name:`, so the check-run name is
+# `build`. That is the name the same job carries on iderex/jellyfin-plugin-sso,
+# and keeping it means the two required-check lists read the same way where the
+# two boards do the same thing. Renaming this job detaches it from any rule that
+# names it, silently and with a green tick.
+#
+# Warnings are errors, and that is not decided here. It is `[workspace.lints]`
+# in the root manifest, inherited by every member, so the rule reaches a
+# contributor's own `cargo build` and not only this runner. The reasoning is
+# written next to the table. A gate that denies what a local build allows
+# teaches the tree that a warning is somebody else's problem.
+#
+# `--locked` is the other half of this job and is the half `clippy` does not
+# cover. It refuses a build that would rewrite Cargo.lock, so a dependency
+# change is a diff somebody reviews rather than a resolution that happened on a
+# runner. `clippy` and `coverage` both resolve freely, so nothing else in the
+# tree would notice.
+#
+# Runs on every branch as well as on pull requests. The issue asks for pull
+# requests and the default branch; this is wider, on purpose, because a fixture
+# branch proving this check bites has to be able to red it without opening a
+# pull request against it, which is how the other checks in this tree are
+# proven.
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No step pushes, so do not leave the token in .git/config.
+          persist-credentials: false
+
+      # No toolchain action. rust-toolchain.toml pins the version, and rustup on
+      # the runner honours it, so the compiler that judges this build is the one
+      # a contributor has locally.
+      - name: Show the toolchain the pin resolved to
+        run: |
+          cargo --version
+          rustc --version
+
+      # --all-targets, so tests, benches and examples are compiled too. A
+      # warning denied only in library code is a warning that moves into the
+      # test files instead.
+      - name: Build with the lockfile held still
+        run: cargo build --workspace --all-targets --locked
+
+      # Stated separately from the build so that a lockfile the build rewrote
+      # cannot be read as one it did not touch. `--locked` already refuses that,
+      # and this step says so out loud at the end of the job rather than leaving
+      # the reader to infer it from an exit code.
+      - name: Show that the lockfile is unchanged
+        run: git diff --exit-code -- Cargo.lock

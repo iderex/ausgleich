@@ -12,3 +12,11 @@ repository.workspace = true
 # keeps the file seam honest: the solver cannot see the loader, so the problem
 # file is the only route between them.
 [dependencies]
+
+# Warnings are errors here too. The levels are the workspace ones, in
+# [workspace.lints] at the root, so this member does not carry its own copy and
+# cannot drift from the others. A member that omits these two lines opts out of
+# the whole table in silence, which is what
+# crates/ausgleich-cli/tests/workspace_lints.rs refuses.
+[lints]
+workspace = true
