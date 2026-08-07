@@ -1,0 +1,57 @@
+# The controlled vocabulary of measurement methods.
+#
+# One term to a line. A line that is empty, and a line whose first character is
+# a hash, is not a term. The line beginning "version " states which version of
+# this vocabulary the file holds and is the only line that is not a term.
+#
+# Free text was the alternative and it was refused in #7 for one reason:
+# grouping by method is half of what a meta-analysis does, and free text cannot
+# be grouped. Two records saying "torsion balance" and "torsion-balance" are two
+# groups of one.
+#
+# Additions are a deliberate edit to this file. A vocabulary that grows
+# whenever a record does not fit groups nothing, so a term is added when it is
+# a term somebody will group by, and the record that prompted it is not on its
+# own a reason.
+#
+# The list is deliberately not only this repository's own domain. The block
+# these terms belong to is shared with another board that records published
+# measurements of other quantities, and a vocabulary spelling only the methods
+# of a constants adjustment would make that sharing a claim rather than
+# something a fixture can show.
+
+version 1
+
+# Spectroscopy and scattering
+optical-frequency-comb-spectroscopy
+two-photon-laser-spectroscopy
+microwave-spectroscopy
+muonic-atom-spectroscopy
+elastic-electron-scattering
+
+# Traps, resonance and moments
+penning-trap-cyclotron-ratio
+penning-trap-g-factor
+magnetic-resonance-shielded-ratio
+atom-interferometry-recoil
+
+# Realisations of the unit system
+kibble-balance
+x-ray-crystal-density
+josephson-voltage-comparison
+quantum-hall-resistance-comparison
+
+# Mechanical and gravitational
+torsion-balance
+beam-balance
+free-fall-absolute-gravimetry
+
+# Not measured by the publication that reports it
+theoretical-calculation
+weighted-mean-of-published-values
+
+# Methods this board does not use, from the domain the block is shared with
+gas-chromatography-mass-spectrometry
+isotope-dilution-mass-spectrometry
+coulometric-titrimetry
+gravimetric-preparation-of-a-mixture
