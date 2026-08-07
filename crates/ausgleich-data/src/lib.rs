@@ -13,3 +13,7 @@
 //! and the units table is #34. The crate exists ahead of them so that the
 //! dependency arrows are asserted by a test before there is code to route
 //! around them.
+
+
+// A misformatted item, so the fmt check has something to refuse.
+pub   fn  spacing_the_formatter_will_not_accept( )  ->  u8 {   0   }
