@@ -7,3 +7,38 @@ the architecture is written down there with its reasons before the code
 that depends on it exists.
 
 See [NOTICE.md](NOTICE.md) for the intended-use notice.
+
+## Nothing leaves your machine
+
+This program reads local files and writes local files. It makes no network
+request while it runs and it sends no telemetry, in any build, ever. There is no
+setting and no build flag that turns either on, so there is nothing here you have
+to remember to switch off.
+
+Nothing is collected about you, about the machine you run it on, or about the
+input set you give it. No usage is counted anywhere. If you check a constant, no
+record of your having checked it exists outside your own disk.
+
+The only personal data this repository holds is bibliographic: the authors of a
+publication, and the name of whoever read a value out of it and the name of
+whoever confirmed that reading. That is there so a number can be traced to a
+person who takes responsibility for it, and it is the same information the
+publication already carries.
+
+Fetching source publications is a separate program you run on purpose. It is not
+the program that does the adjustment, no part of the adjustment depends on it,
+and running the adjustment never starts it.
+
+If some future version ever exchanged input sets or results with another
+installation, that would be something you do deliberately, for a destination you
+name, off unless you turn it on, and the documentation would say what would leave
+and where it would go before anything went. It would never be a default, never
+arrive in an update, and never be a side effect of a command whose name is about
+something else. No version does this today.
+
+You do not have to take this on trust, and you do not have to read Rust to check
+it. The check named `Enforce greppable invariants` refuses a network call, and a
+dependency that could make one, anywhere in this workspace outside that separate
+fetch program. It runs on every change, and the branch
+`fixture/23-network-call` is a deliberate violation kept around to show it
+failing.
