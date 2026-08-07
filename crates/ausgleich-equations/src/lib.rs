@@ -7,3 +7,7 @@
 //!
 //! Empty for now. The registry itself is #49 and the equations that go in it are
 //! #50 through #55.
+
+/// A physical constant written into source, so the second invariant has
+/// something to refuse. Not for merging.
+pub const RYDBERG_INVERSE_METRES: f64 = 10973731.568157;
