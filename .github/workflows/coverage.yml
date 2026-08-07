@@ -1,0 +1,73 @@
+# Coverage, measured and reported, against a floor that lives in a file.
+#
+# The floor is coverage-floor.json and nothing else. A number in workflow
+# arguments is a number somebody lowers in the same commit as the change that
+# needed it lowered, and the diff shows a workflow edit rather than a decision.
+# In a file, lowering it is a line somebody has to defend on its own.
+#
+# No badge that a run did not produce. A coverage number in a readme that nothing
+# recomputes is a claim, and this repository does not carry claims dressed as
+# measurements.
+#
+# Region coverage as well as line coverage. The solver will be full of short
+# branches on numerical conditions, and line coverage hides exactly those.
+#
+# Coverage is a floor and not a goal. What proves a numerical routine is tested
+# is the mutation run planned for the solver and the fixtures behind it. This
+# only proves nothing is entirely unvisited.
+name: Coverage
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Pinned so the number this job reports and the number a contributor gets
+      # locally come from the same instrument. A coverage tool is a measuring
+      # device, and an unpinned one makes every comparison across time a
+      # comparison of two devices.
+      LLVM_COV_VERSION: "0.8.7"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+
+      # Built here rather than fetched by a third-party action. This repository
+      # takes no action it did not pin and no installer it did not name, and the
+      # cost is the minutes it takes to compile.
+      - name: Install the coverage tool
+        run: |
+          set -euo pipefail
+          rustup component add llvm-tools-preview
+          cargo install cargo-llvm-cov --locked --version "$LLVM_COV_VERSION"
+          cargo llvm-cov --version
+
+      - name: Measure against the floor
+        run: |
+          set -euo pipefail
+          floor_lines=$(jq -r '.lines' coverage-floor.json)
+          floor_regions=$(jq -r '.regions' coverage-floor.json)
+          echo "floor: lines ${floor_lines}%, regions ${floor_regions}%"
+          # The comparison is the tool's own, not a shell expression over two
+          # numbers it printed. It prints the table either way, so the run says
+          # what it measured whether it passed or failed.
+          cargo llvm-cov --workspace \
+            --fail-under-lines "$floor_lines" \
+            --fail-under-regions "$floor_regions"
