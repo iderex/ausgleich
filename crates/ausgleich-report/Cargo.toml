@@ -3,6 +3,7 @@ name = "ausgleich-report"
 description = "The report an operator reads, rendered from a result and the input set that produced it."
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]

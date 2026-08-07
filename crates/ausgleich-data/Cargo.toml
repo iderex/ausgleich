@@ -3,6 +3,7 @@ name = "ausgleich-data"
 description = "The record types for an input set, and the loader that reads them off disk."
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 repository.workspace = true
 
 # No workspace dependency, in either direction with the solver. The loader knows

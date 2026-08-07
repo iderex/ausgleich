@@ -3,6 +3,7 @@ name = "ausgleich-solve"
 description = "The least-squares solve: structs in, structs out, no filesystem."
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 repository.workspace = true
 
 # No workspace dependency at all, and that is the point of this crate's place in

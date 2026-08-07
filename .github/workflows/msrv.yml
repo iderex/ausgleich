@@ -1,0 +1,77 @@
+# The oldest toolchain this workspace is expected to build on.
+#
+# There is a floor at all because of who runs this. An operator on a long-term
+# support distribution has an older compiler than the pinned one, and a project
+# that only builds on last week's toolchain is a project that gets rebuilt by
+# nobody.
+#
+# The floor is `rust-version` in the manifest and is read out of the metadata
+# here rather than written twice. A workflow carrying its own copy of the number
+# is a second place it can be raised, and the two would disagree silently: the
+# build would pass against a floor nobody declared.
+#
+# Runs on every branch as well as on pull requests, so a fixture branch proving
+# this check bites can red it without opening a pull request.
+name: MSRV
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The check-run name is what a rule would match, and it has a space in it,
+  # which a job id cannot carry. This is the one job in the tree that sets
+  # `name:` for that reason.
+  msrv-build:
+    name: msrv build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read the floor out of the manifest
+        run: |
+          set -euo pipefail
+          # cargo here is the pinned toolchain, resolved from rust-toolchain.toml.
+          cargo --version
+          # Every member must declare the same floor. Two members disagreeing is
+          # a workspace with two floors, and a build against the lower one would
+          # pass while the higher one was never tried.
+          floors=$(cargo metadata --format-version 1 --no-deps | jq -r '[.packages[].rust_version | tostring] | unique | join(" ")')
+          echo "declared floors: ${floors}"
+          case "$floors" in
+            "" | *null* | *" "*)
+              echo "::error::Expected exactly one rust-version across the workspace, got: ${floors}"
+              exit 1
+              ;;
+          esac
+          echo "MSRV=${floors}" >> "$GITHUB_ENV"
+
+      - name: Install the floor toolchain
+        run: |
+          set -euo pipefail
+          # minimal profile: this job builds and does nothing else, so it needs
+          # no formatter and no linter at the floor.
+          rustup toolchain install --profile minimal --no-self-update "$MSRV"
+          rustup run "$MSRV" cargo --version
+
+      - name: Build at the floor
+        run: |
+          set -euo pipefail
+          # --locked, so a build that would need to rewrite Cargo.lock fails here
+          # rather than quietly resolving to something the floor can take.
+          # --all-targets, because a test that needs a newer toolchain is still a
+          # thing an operator's compiler cannot build.
+          cargo "+$MSRV" build --workspace --all-targets --locked
