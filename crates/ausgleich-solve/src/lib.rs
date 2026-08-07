@@ -10,3 +10,8 @@
 //!
 //! Empty for now. The solve is #56 through #63, and the file seam that lets a
 //! different fit read the same problem is #13.
+
+// A suppression attribute with no reason string, so the seventh invariant has
+// something to refuse. Not for merging.
+#[allow(dead_code)]
+fn never_called() {}
