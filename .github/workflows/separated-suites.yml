@@ -1,0 +1,57 @@
+# The suites that are not run by default, asked for by hand.
+#
+# `workflow_dispatch` and nothing else. No `push`, no `pull_request`, no
+# schedule. That is the whole point: a suite that reaches a server this project
+# does not control, or that takes minutes, is a cost somebody chooses to pay,
+# and a green pull request must not be readable as coverage of either.
+#
+# The suites, what they need and what they cost are on the roster in
+# crates/ausgleich-cli/tests/suites.rs, which the default run prints. This file
+# holds the invocations and not the reasons, so the two cannot drift.
+#
+# The jobs here are named for what they need rather than called integration,
+# which is #14's rule. Nothing about them is required by any branch protection
+# and nothing should be: a required check that only ever runs when somebody
+# presses a button would sit pending on every pull request.
+name: Separated suites
+
+on:
+  workflow_dispatch:
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  network-bound:
+    name: separated suite (network-bound)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+      - name: Run the network-bound suite
+        run: cargo test --package ausgleich-cli --features suite-network --test suite_network -- --nocapture
+
+  long-running:
+    name: separated suite (long-running)
+    runs-on: ubuntu-latest
+    # Longer than the default suite's, because the thing this suite is for is
+    # taking minutes. A timeout copied from a fast job would turn the cost this
+    # suite exists to isolate into a failure.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+      - name: Run the long-running suite
+        run: cargo test --package ausgleich-cli --features suite-long --test suite_long -- --nocapture
