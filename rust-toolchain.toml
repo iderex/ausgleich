@@ -1,0 +1,14 @@
+# The toolchain this repository resolves to, on every machine and in the gate.
+#
+# Pinned to an exact version rather than tracking a channel. The output here is
+# a set of numbers other people will quote, so a build has to produce the same
+# digits on somebody else's machine, and a floating channel makes that a
+# coincidence rather than a property. Raising this version is a deliberate edit
+# visible in a diff, which is the point of writing it in a tracked file instead
+# of leaving it to whatever the host happens to carry.
+#
+# The oldest toolchain a build is still expected to work on is a separate
+# number and does not live here.
+
+[toolchain]
+channel = "1.97.0"
