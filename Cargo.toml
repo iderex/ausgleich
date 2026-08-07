@@ -9,7 +9,7 @@ members = ["crates/*"]
 # for the maintainer, #16, and a manifest field is not the place to settle it by
 # accident.
 [workspace.package]
-version = "0.0.0"
+version = "0.0.1"
 edition = "2024"
 repository = "https://github.com/iderex/ausgleich"
 # The oldest toolchain this workspace is expected to build on. It is a field
