@@ -1,0 +1,34 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+# Settings every member inherits, so an edition or a version is one edit rather
+# than five that can drift apart.
+#
+# No `license` key. Which license this repository carries is an open decision
+# for the maintainer, #16, and a manifest field is not the place to settle it by
+# accident.
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+repository = "https://github.com/iderex/ausgleich"
+
+# The members, named once, so a member depending on another writes
+# `workspace = true` and no path is repeated. Which of these edges are allowed is
+# not decided here: it is asserted by the test in
+# crates/ausgleich-cli/tests/dependency_edges.rs, and an edge added to a member
+# manifest without a line in that test reds the suite.
+[workspace.dependencies]
+ausgleich-data = { path = "crates/ausgleich-data" }
+ausgleich-equations = { path = "crates/ausgleich-equations" }
+ausgleich-solve = { path = "crates/ausgleich-solve" }
+ausgleich-report = { path = "crates/ausgleich-report" }
+
+[profile.release]
+# One codegen unit. Splitting a crate across units changes which calls the
+# optimiser can see across, so the count is an input to the code that comes out.
+# Pinning it removes that input; whether the numbers this program prints move
+# with it is not measured here and is #3's question. Written down rather than
+# left at the default so that raising it is an edit to a line that says why it
+# is one.
+codegen-units = 1

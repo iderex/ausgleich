@@ -1,0 +1,18 @@
+[package]
+name = "ausgleich-cli"
+description = "The command line: the only crate that reads arguments."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ausgleich"
+path = "src/main.rs"
+
+[dependencies]
+# The command line is where the four libraries are assembled into a run, so it
+# is the one member allowed to see all of them.
+ausgleich-data = { workspace = true }
+ausgleich-equations = { workspace = true }
+ausgleich-solve = { workspace = true }
+ausgleich-report = { workspace = true }

@@ -1,0 +1,12 @@
+[package]
+name = "ausgleich-equations"
+description = "The registry of observational equations, each printing the form it implements."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+# An equation is written against the record types it reads, so it sees the data
+# model. It does not see the loader's filesystem side, which is why that side
+# stays behind a function the equation crate never calls.
+ausgleich-data = { workspace = true }
