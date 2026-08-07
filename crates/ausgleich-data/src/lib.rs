@@ -13,3 +13,20 @@
 //! and the units table is #34. The crate exists ahead of them so that the
 //! dependency arrows are asserted by a test before there is code to route
 //! around them.
+
+/// A library item newer than the floor, with the lint that catches it silenced,
+/// so the msrv build check has something only it can refuse.
+///
+/// u32::is_multiple_of is stable on the pinned toolchain and unstable on the
+/// floor. clippy::incompatible_msrv sees that from rust-version alone, and the
+/// allow below is what somebody writes when they meet that error and read it as
+/// noise. After the allow, every check that runs on the pinned toolchain is
+/// green and the code still does not build for the operator the floor exists
+/// for. That is the gap this check closes.
+#[allow(
+    clippy::incompatible_msrv,
+    reason = "the fixture exists to prove the floor build refuses what a silenced lint lets through"
+)]
+pub fn divides_evenly(n: u32, by: u32) -> bool {
+    n.is_multiple_of(by)
+}
