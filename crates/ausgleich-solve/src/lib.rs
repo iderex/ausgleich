@@ -10,3 +10,9 @@
 //!
 //! Empty for now. The solve is #56 through #63, and the file seam that lets a
 //! different fit read the same problem is #13.
+
+/// A function no test reaches, so the coverage check has something to refuse.
+/// Not for merging.
+pub fn never_reached(residual: f64) -> f64 {
+    if residual > 0.0 { residual } else { -residual }
+}
