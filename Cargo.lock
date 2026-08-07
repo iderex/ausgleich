@@ -15,6 +15,9 @@ dependencies = [
 [[package]]
 name = "ausgleich-data"
 version = "0.0.0"
+dependencies = [
+ "option-ext",
+]
 
 [[package]]
 name = "ausgleich-equations"
@@ -34,3 +37,9 @@ dependencies = [
 [[package]]
 name = "ausgleich-solve"
 version = "0.0.0"
+
+[[package]]
+name = "option-ext"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"

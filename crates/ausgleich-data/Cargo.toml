@@ -12,6 +12,12 @@ publish.workspace = true
 # nothing about the solve, so a fixture for the solver can never need a
 # directory on disk to exist.
 [dependencies]
+# One dependency, and nothing else on this branch. option-ext is MPL-2.0, which
+# is not on the allowlist in deny.toml, because file-level copyleft is not
+# something all five candidate answers to entry 1 of #16 can carry. It has no
+# dependencies of its own, so this branch adds exactly one crate to the graph
+# and the license leg is the only thing that can move.
+option-ext = "=0.2.0"
 
 # Warnings are errors here too. The levels are the workspace ones, in
 # [workspace.lints] at the root, so this member does not carry its own copy and
