@@ -12,6 +12,16 @@ members = ["crates/*"]
 version = "0.0.0"
 edition = "2024"
 repository = "https://github.com/iderex/ausgleich"
+# The oldest toolchain this workspace is expected to build on. It is a field
+# here and nowhere else: the `msrv build` check reads it out of the metadata
+# rather than carrying its own copy, so raising the floor is this one edit and
+# is visible in a diff.
+#
+# 1.85.0 is where the 2024 edition starts, so it is the floor the edition
+# already forces rather than a number anybody picked. Lower is not available
+# without giving up the edition; higher would be a choice and would need a
+# reason written next to it.
+rust-version = "1.85.0"
 
 # The members, named once, so a member depending on another writes
 # `workspace = true` and no path is repeated. Which of these edges are allowed is
