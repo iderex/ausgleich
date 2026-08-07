@@ -1,0 +1,12 @@
+[package]
+name = "ausgleich-report"
+description = "The report an operator reads, rendered from a result and the input set that produced it."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+# The report names the input set it came from, so it sees the record types.
+ausgleich-data = { workspace = true }
+# It renders the result the solve returns, so it sees those types too.
+ausgleich-solve = { workspace = true }

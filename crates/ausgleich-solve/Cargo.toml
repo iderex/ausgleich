@@ -1,0 +1,13 @@
+[package]
+name = "ausgleich-solve"
+description = "The least-squares solve: structs in, structs out, no filesystem."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+# No workspace dependency at all, and that is the point of this crate's place in
+# the workspace. It is the crate that carries fixture tests and a mutation run,
+# and neither is possible for code that reads a directory on the way in. It also
+# keeps the file seam honest: the solver cannot see the loader, so the problem
+# file is the only route between them.
+[dependencies]
