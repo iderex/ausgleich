@@ -16,11 +16,11 @@
 # Hardened per the repo's workflow policy (see zizmor.yml): every action is
 # SHA-pinned with a version comment, checkout runs with persist-credentials:false,
 # permissions are declared read-only at the top level and the write scopes are
-# granted only on the job that needs them. This is a self-audit only - it does
-# not build, test, or touch the publish/release pipeline. Note: publish_results
-# below publishes the OpenSSF supply-chain *score* to the OpenSSF API (the public
-# badge), not any software artifact - it is unrelated to the plugin release
-# pipeline and only works when run from the default branch.
+# granted only on the job that needs them. This is a self-audit only - it builds
+# nothing, runs no test, and produces no artefact anybody downloads. Note:
+# publish_results below publishes the OpenSSF supply-chain *score* to the OpenSSF
+# API (the public badge) and nothing else; no software leaves this repository by
+# this route, and the call only works when run from the default branch.
 name: Scorecard supply-chain security
 
 on:
@@ -87,7 +87,7 @@ jobs:
           path: results.sarif
           retention-days: 5
 
-      # Surface the findings in the code-scanning tab, alongside CodeQL and zizmor.
+      # Surface the findings in the code-scanning tab, alongside zizmor.
       - name: Upload to code-scanning
         uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:

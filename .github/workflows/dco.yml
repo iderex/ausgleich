@@ -1,9 +1,15 @@
-# Developer Certificate of Origin (DCO) sign-off gate (#746). A contributor
+# Developer Certificate of Origin (DCO) sign-off gate. A contributor
 # legal-authorization mechanism - OpenSSF Silver / OSPS-LE-01.01 - implemented as a
-# self-contained first-party check, no external DCO App or third-party action (the
-# same internal-only posture as the PR-hygiene gate). It verifies every non-merge
-# commit in the PR carries a `Signed-off-by:` trailer matching its author, i.e. the
-# author asserted the DCO in ./DCO. Fail-closed: any unsigned commit reds the check.
+# self-contained first-party check, with no external DCO App and no third-party
+# action, so nothing outside this repository decides whether the gate passes. It
+# verifies every non-merge commit in the PR carries a `Signed-off-by:` trailer
+# matching its author, which is how the author asserts Developer Certificate of
+# Origin 1.1. Fail-closed: any unsigned commit reds the check.
+#
+# The DCO text and a contributor guide are not in this tree yet, which is #26.
+# Until they land this comment and the failure message name the version instead
+# of a path, because a pointer to a file that is not there teaches a reader to
+# stop following pointers.
 name: DCO
 
 on:
@@ -74,7 +80,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::One or more commits lack a DCO Signed-off-by matching the author. Sign your work with 'git commit -s' (or add it retroactively with 'git rebase --signoff <base>'). See CONTRIBUTING.md and ./DCO."
+            echo "::error::One or more commits lack a DCO Signed-off-by matching the author. Sign your work with 'git commit -s' (or add it retroactively with 'git rebase --signoff <base>'). The text the trailer asserts is Developer Certificate of Origin 1.1."
             exit 1
           fi
           echo "All commits carry a matching DCO sign-off."
