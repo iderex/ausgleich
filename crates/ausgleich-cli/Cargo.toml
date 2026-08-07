@@ -18,6 +18,32 @@ ausgleich-equations = { workspace = true }
 ausgleich-solve = { workspace = true }
 ausgleich-report = { workspace = true }
 
+# The two suites that are not the default one, each behind a feature that is
+# not on by default. There is no `default` entry in this table, and adding one
+# that names either feature is refused by
+# crates/ausgleich-cli/tests/suites.rs.
+#
+# A feature rather than a runtime skip, because a feature separates earlier: the
+# target below is not compiled at all unless it is asked for. A `#[ignore]`
+# would leave the code in the default build, where a networking dependency would
+# still be linked and a sweep would still be compiled into the binary the
+# coverage run measures.
+[features]
+suite-network = []
+suite-long = []
+
+# `required-features` is what holds each target back. What each suite is for,
+# what it needs and what invoking it costs are on the roster in
+# crates/ausgleich-cli/tests/suites.rs, which the default run prints and which
+# refuses a target held back here without an entry there.
+[[test]]
+name = "suite_network"
+required-features = ["suite-network"]
+
+[[test]]
+name = "suite_long"
+required-features = ["suite-long"]
+
 # Warnings are errors here too. The levels are the workspace ones, in
 # [workspace.lints] at the root, so this member does not carry its own copy and
 # cannot drift from the others. A member that omits these two lines opts out of

@@ -1,0 +1,60 @@
+# The default suite.
+#
+# The job id is `test` and the job sets no `name:`, so the check-run name is
+# `test`, which is the name the same job carries on the board this gate was
+# copied from.
+#
+# What runs here is what #14 allows: no display, no privileged account, no
+# socket bound off loopback, no write outside a temporary directory. Doc tests
+# count and run, which is why the command is `cargo test` and not
+# `cargo test --all-targets`; the second form silently drops them.
+#
+# The suites that are not run here are named by the run itself rather than by
+# this comment. `crates/ausgleich-cli/tests/suites.rs` prints the roster, what
+# each separated suite needs, what invoking it costs and the command that
+# invokes it, and it prints it on an ordinary green run rather than only on a
+# failure. A list in this file would be a second copy that drifts against the
+# one the guards are derived from.
+#
+# The separated suites are not invoked here and not invoked on a pull request.
+# .github/workflows/separated-suites.yml is where they are asked for, by hand.
+#
+# Runs on every branch as well as on pull requests, so a fixture branch proving
+# a test-side guard bites can red this check without opening a pull request.
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Several tests in this suite run `git grep` and `git ls-files` over
+          # the tree, so git has to be able to answer what is tracked. They need
+          # no history beyond the commit under test, and no step pushes, so the
+          # token is not persisted.
+          persist-credentials: false
+
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+
+      # --locked for the same reason the build job passes it: a suite that
+      # resolved its own dependencies is a suite that ran against something
+      # nobody committed.
+      - name: Run the default suite
+        run: cargo test --workspace --locked
