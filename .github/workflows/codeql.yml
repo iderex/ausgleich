@@ -1,0 +1,76 @@
+# The static analyser, run on this language.
+#
+# #75 is where the decision is argued and where the finding it rests on is
+# written down with its date and its sources. The short form: the analyser the
+# board this gate was modelled on requires could not read this language when
+# that issue was opened, which is why the issue offered a stand-in as the other
+# option. It can now, generally rather than in preview, in the advanced setup
+# this file uses, and both conditions in its own footnote are met here. So the
+# stand-in is not what landed.
+#
+# What it does NOT replace. The linter at deny level, the advisory and licence
+# policy over the dependency graph, and the greppable invariants all stay, and
+# they are not redundancy: they answer questions this analyser does not ask.
+# #75 lists which class is covered by which check, and lists the classes covered
+# by nothing at all. That list is the point of the issue and this comment is not
+# a substitute for reading it.
+#
+# The action is pinned to the same commit the scorecard workflow already pins,
+# so the analysis adds no new supplier to this tree.
+#
+# No build step. The extraction runs without one, which is what the general
+# availability announcement is about, and a build step here would be a second
+# way of compiling this workspace that could drift from the one build.yml runs.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["**"]
+
+# Explicit deny-all at workflow level; the job below grants only what it needs.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    # The check-run name a reader looks for, and it carries the language rather
+    # than being called "analyze", because a board running this on two languages
+    # would otherwise have two checks with one name.
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write # upload the results into the code-scanning tab
+      contents: read # checkout the sources to analyse
+      actions: read # read the workflow run this analysis belongs to
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["rust"]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Named here so the run says which toolchain the pin resolved to, the same
+      # line every other job in this tree opens with. The extraction reads the
+      # workspace with cargo, so the pinned toolchain is the one it sees.
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+
+      - name: Initialise
+        uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Analyse
+        uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          category: "/language:${{ matrix.language }}"
