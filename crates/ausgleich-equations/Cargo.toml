@@ -5,6 +5,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
+# Inherited, and the reason is in the root manifest.
+publish.workspace = true
 
 [dependencies]
 # An equation is written against the record types it reads, so it sees the data

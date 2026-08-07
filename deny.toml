@@ -1,0 +1,115 @@
+# The advisory, license, duplicate and source policy for every crate this
+# workspace pulls in.
+#
+# The policy is this file and not the workflow's arguments. A threshold written
+# on a command line is a threshold somebody widens in the same commit as the
+# change that needed it widened, and the diff then reads as a workflow edit
+# rather than as a decision. Here, relaxing any of the four is a line in a
+# tracked file with a reason next to it.
+#
+# Fail closed on all four legs, and the legs are set to `deny` rather than left
+# at a default, because a default is a thing a tool may change under you.
+
+[graph]
+# Every feature, so a crate that only arrives behind an optional feature is
+# still judged. A policy that reads the default feature set is a policy a
+# feature flag walks around.
+all-features = true
+
+[advisories]
+# The RustSec database, named rather than assumed.
+db-urls = ["https://github.com/rustsec/advisory-db"]
+# A yanked crate is one the publisher withdrew, and the reason is often the
+# reason an advisory exists.
+yanked = "deny"
+# Every dependency, not only the direct ones. An unmaintained crate three levels
+# down is still code this program runs.
+unmaintained = "all"
+# Empty, and it stays empty until something is in it with a reason and a date.
+# An ignore list is where a gate goes to stop meaning anything.
+ignore = []
+
+[licenses]
+# The intersection that is safe under every option still on the table in entry 1
+# of #16, which is the license of this repository and is undecided.
+#
+# That entry lists Apache-2.0 or the MIT and Apache-2.0 dual form, GPL-3.0,
+# MPL-2.0 and EUPL-1.2. A permissive dependency can be carried by all four. A
+# copyleft dependency cannot: a GPL-3.0 crate is not something an Apache-2.0
+# release can ship, and a file-level copyleft crate imposes terms the permissive
+# options do not. So the list below is the permissive set and nothing else,
+# which is the narrowest of the five answers rather than a guess at which one
+# will be chosen.
+#
+# This list is expected to move once entry 1 is decided. It can only widen: a
+# decision for GPL-3.0 would let reciprocal licenses in, and a decision for
+# Apache-2.0 would leave it where it is. Widening it is an edit here with the
+# decision quoted, and until then a dependency outside it is refused rather than
+# argued about after it has landed.
+allow = [
+  "0BSD",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
+  "MIT-0",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+# The expression parser's certainty about a licence it read out of a file. The
+# default is 0.8; this is higher, so a text it half-recognised is a refusal
+# rather than a guess in the permissive direction.
+confidence-threshold = 0.93
+# Empty. An exception is a crate allowed a licence the list refuses, and each
+# one belongs here with its reason at the moment somebody needs it.
+exceptions = []
+
+# The five members of this workspace carry no license field, because which
+# license this repository carries is entry 1 of #16 and is undecided. They also
+# carry `publish = false`, which is what follows from that rather than a
+# decision about it, and this treats a member that cannot be published as
+# private and judges the graph around it.
+#
+# The narrow reading matters: it exempts crates in this tree from the license
+# leg and nothing else. Every dependency is still judged, which is what the leg
+# is for. The exemption disappears on its own the day entry 1 is decided and
+# `publish = false` comes out of the root manifest.
+[licenses.private]
+ignore = true
+
+[bans]
+# Two versions of one crate in the graph is the leg that earns its place in a
+# numerical project. Two versions of one arithmetic crate is a way to get two
+# different answers out of one binary, and neither of them is wrong in a way the
+# suite would see.
+multiple-versions = "deny"
+# A wildcard version is a dependency whose contents are decided by whoever
+# publishes next.
+wildcards = "deny"
+# One exception, and it is not a loosening. A path dependency between two
+# members of this workspace has no version requirement to state, so every one of
+# the seven arrows in this tree reads as a wildcard to the checker. Which of
+# those arrows may exist is asserted by
+# crates/ausgleich-cli/tests/dependency_edges.rs, in both directions, so they are
+# the one class of wildcard something else already refuses.
+allow-wildcard-paths = true
+# Empty, and each has the same shape as the license exceptions: a line with a
+# reason at the moment somebody needs one.
+allow = []
+deny = []
+skip = []
+skip-tree = []
+
+[sources]
+# One registry, and nothing else. A crate arriving from a git URL or a private
+# index is a crate whose contents are not the ones crates.io holds under that
+# name, and a run reproducing bit for bit is #3's requirement.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
