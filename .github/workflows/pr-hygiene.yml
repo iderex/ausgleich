@@ -177,20 +177,20 @@ jobs:
             # stdin rather than as an argument, so no part of it is ever parsed
             # by a shell.
             if git show -s --format='%B' "$sha" | python3 -c '
-import sys
+          import sys
 
-allowed = set([0x0A]) | set(range(0x20, 0x7F))
-text = sys.stdin.buffer.read().decode("utf-8", errors="replace")
-bad = []
-for line_number, line in enumerate(text.split("\n"), start=1):
-    for column, character in enumerate(line, start=1):
-        point = ord(character)
-        if point not in allowed:
-            bad.append((line_number, column, point, character))
-for line_number, column, point, character in bad:
-    print(f"    line {line_number}, column {column}: U+{point:04X} {character!r}")
-sys.exit(1 if bad else 0)
-'; then
+          allowed = set([0x0A]) | set(range(0x20, 0x7F))
+          text = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+          bad = []
+          for line_number, line in enumerate(text.split("\n"), start=1):
+              for column, character in enumerate(line, start=1):
+                  point = ord(character)
+                  if point not in allowed:
+                      bad.append((line_number, column, point, character))
+          for line_number, column, point, character in bad:
+              print(f"    line {line_number}, column {column}: U+{point:04X} {character!r}")
+          sys.exit(1 if bad else 0)
+            '; then
               echo "ok    $sha"
             else
               echo "OUTSIDE THE TABLE  $sha"
