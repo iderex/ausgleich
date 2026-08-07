@@ -6,3 +6,7 @@ laws that apply to them, including copyright and data protection law. The
 project does not endorse or support unlawful use of any kind, and nothing
 in it is designed to enable such use. The license contains the full
 warranty and liability disclaimer.
+
+##   A heading with spacing prettier will not accept
+This    paragraph   has   runs   of   spaces   and   no   blank   line   above
+it,  so the prose formatter has something to refuse.
