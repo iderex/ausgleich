@@ -1,0 +1,41 @@
+# A correlation coefficient record, as one sits in an input set.
+#
+# Every value here is invented. The publication does not exist, the two
+# identifiers resolve to nothing, and the coefficient was not read out of any
+# table. That is deliberate, for the same reason the datum fixture beside it
+# says so: a fixture carrying a real citation is a claim about a real
+# publication that nobody checked against the publication.
+#
+# The record is a provenance block with two more fields at the top. The block is
+# not a subtable here, so the reader in src/provenance.rs sees exactly the bytes
+# it sees in a datum file.
+
+version = 1
+between = ["fixture-datum-one", "fixture-datum-two"]
+value = 0.24
+
+[publication]
+authors = ["Beispiel, A.", "Muster, B."]
+title = "A fixture standing in for a published correlation between two inputs"
+venue = "Journal of Fixtures"
+year = 2019
+doi = "10.0000/fixture-correlation-coefficient"
+
+[read_from]
+locator = "Table VII"
+page = 23
+
+[measurement]
+reported = 2018-11-05
+method = "penning-trap-cyclotron-ratio"
+origin = "measured"
+
+[uncertainty]
+kind = "combined"
+coverage_factor = 1.0
+
+[digitisation]
+read_by = "Reader, A."
+read_on = 2026-02-11
+confirmed_by = "Checker, B."
+confirmed_on = 2026-02-13
