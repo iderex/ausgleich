@@ -1,0 +1,171 @@
+# Every unit this repository accepts, with the dimension it belongs to and its
+# factor to the internal base units.
+#
+# This is data rather than a match statement in source, for two reasons. Adding
+# a unit should be a one-file diff a reviewer can check against a definition,
+# and a conversion factor written in Rust is refused by the invariants gate,
+# which reads the shape of a number and cannot tell an exact factor from a
+# measured one.
+#
+# The base unit of a dimension is not declared. It is the unit of that dimension
+# whose factor is exactly one, and the reader refuses a dimension with no such
+# unit or with two of them. A declared base would be a second statement of
+# something the factors already say, and the two could disagree.
+#
+# A dimension here is the name of a kind of quantity rather than a vector of
+# exponents over the SI base dimensions. What that catches is a value in
+# megahertz offered for a quantity declared as a length. What it cannot do is
+# see that hertz and inverse seconds are the same physical dimension, so a unit
+# written the second way is its own entry naming the frequency dimension. The
+# bound is deliberate: the failure this table exists to prevent is a wrong
+# conversion inside one kind of quantity, and an exponent vector would in
+# addition make hertz and becquerel interchangeable, which is not wanted here.
+#
+# Three kinds of factor, and the third is why this is not a plain map of symbol
+# to number.
+#
+#   exact-by-definition   the factor follows from a definition and carries no
+#                         source beyond it
+#   measured              the factor is a published number and carries the
+#                         source it was read from
+#   an-adjusted-constant  there is no factor. The number converting this unit to
+#                         its base is a quantity the adjustment itself produces,
+#                         so a table carrying it would feed an output of the fit
+#                         back in as an input to the loader. Converting a value
+#                         in such a unit is refused by name rather than done
+#                         quietly.
+#
+# The unified atomic mass unit is the third kind. Its value in kilograms is
+# adjusted rather than defined, which is what makes it different from the
+# electronvolt: the elementary charge has been exact since the 2019 revision of
+# the SI, so the electronvolt has an exact factor to the joule and the atomic
+# mass unit has no factor at all.
+#
+# What is not here. No entry is of the measured kind today, so that arm of the
+# schema is proved by a fixture in the suite rather than by this file. Whether
+# an entry is exact also depends on which adjustment is being reproduced, since
+# several conversions became exact in 2019 and were not before, and one flag per
+# entry cannot serve both sides of that. This table is written for the first
+# target and #67 is where the second one arrives.
+
+version = 1
+
+# Dimensionless is a dimension and is checked like any other, which catches a
+# ratio quoted with a stray unit.
+[[unit]]
+symbol = "1"
+dimension = "dimensionless"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "s"
+dimension = "time"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "Hz"
+dimension = "frequency"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "kHz"
+dimension = "frequency"
+factor_is = "exact-by-definition"
+factor = 1e3
+
+[[unit]]
+symbol = "MHz"
+dimension = "frequency"
+factor_is = "exact-by-definition"
+factor = 1e6
+
+[[unit]]
+symbol = "GHz"
+dimension = "frequency"
+factor_is = "exact-by-definition"
+factor = 1e9
+
+[[unit]]
+symbol = "THz"
+dimension = "frequency"
+factor_is = "exact-by-definition"
+factor = 1e12
+
+[[unit]]
+symbol = "m"
+dimension = "length"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "nm"
+dimension = "length"
+factor_is = "exact-by-definition"
+factor = 1e-9
+
+[[unit]]
+symbol = "pm"
+dimension = "length"
+factor_is = "exact-by-definition"
+factor = 1e-12
+
+[[unit]]
+symbol = "fm"
+dimension = "length"
+factor_is = "exact-by-definition"
+factor = 1e-15
+
+[[unit]]
+symbol = "kg"
+dimension = "mass"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "g"
+dimension = "mass"
+factor_is = "exact-by-definition"
+factor = 1e-3
+
+# The unit with no factor. Its value in kilograms is the atomic mass constant,
+# which the adjustment solves for.
+[[unit]]
+symbol = "u"
+dimension = "mass"
+factor_is = "an-adjusted-constant"
+constant = "atomic-mass-constant"
+
+[[unit]]
+symbol = "J"
+dimension = "energy"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+# Exact since the elementary charge was fixed by definition in the 2019 revision
+# of the SI, and not before it.
+[[unit]]
+symbol = "eV"
+dimension = "energy"
+factor_is = "exact-by-definition"
+factor = 1.602176634e-19
+
+[[unit]]
+symbol = "T"
+dimension = "magnetic-flux-density"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "J/T"
+dimension = "magnetic-moment"
+factor_is = "exact-by-definition"
+factor = 1.0
+
+[[unit]]
+symbol = "m^2/s"
+dimension = "area-per-time"
+factor_is = "exact-by-definition"
+factor = 1.0
