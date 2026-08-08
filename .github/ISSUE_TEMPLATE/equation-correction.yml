@@ -1,0 +1,75 @@
+# A report that a registered observational equation disagrees with the
+# publication it implements.
+#
+# Shaped like the data correction next to it, and for the same reason: the
+# publication and the place in it are required, because an equation is the part
+# of this repository a physicist checks against a paper rather than against a
+# diff.
+name: Equation correction
+description: A registered observational equation disagrees with the publication it implements
+title: "Equation correction: "
+labels: ["solver"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for an equation whose form, or whose stated equation
+        number, does not match its source. If the equation matches the source
+        and the disagreement is with the value it produces, that is a defect
+        report instead.
+
+  - type: input
+    id: identifier
+    attributes:
+      label: The identifier of the equation
+      description: As the registry carries it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: publication
+    attributes:
+      label: The publication
+      description: |
+        Authors, title, journal or report number, year, and a DOI where there
+        is one. Two adjustments that state the same relation differently are
+        two registered equations with two citations, so which one you are
+        reading matters.
+    validations:
+      required: true
+
+  - type: input
+    id: equation-number
+    attributes:
+      label: The equation number and the page
+      description: The number the publication gives the equation, and the page it is on.
+      placeholder: Equation (42), page 043102-31
+    validations:
+      required: true
+
+  - type: textarea
+    id: disagreement
+    attributes:
+      label: What the registry prints and what the publication states
+      description: |
+        The printed form as this repository produces it, and the relation as
+        the publication writes it. Where the difference is a sign, a factor or
+        a term, say which; where it is the whole shape of the relation, say
+        that.
+      value: |
+        The registry prints:
+
+        The publication states:
+    validations:
+      required: true
+
+  - type: textarea
+    id: consequence
+    attributes:
+      label: What it changes
+      description: |
+        Optional, and useful where you know it. Which data the equation
+        applies to, and whether the difference would move an adjusted value or
+        only its uncertainty.
+    validations:
+      required: false
