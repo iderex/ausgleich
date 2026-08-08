@@ -1,0 +1,73 @@
+# Anything that is wrong and is not a number read out of a publication.
+#
+# The two correction forms beside this one are narrow on purpose. This is the
+# one for a crash, a refusal that should not have refused, a run that will not
+# reproduce, or a document that says something the tree does not do.
+name: Defect
+description: Something in this repository is wrong, and it is not a digitised value or an equation
+title: "Defect: "
+# `bug` rather than `defect`, because that is the label this repository has.
+# A template naming a label that does not exist applies none.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A report that carries the command and its output can be acted on. One
+        that describes the output in prose usually cannot, because the
+        difference between two runs is almost always in the part somebody
+        summarised away.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran and what came back. Paste the command and its output rather than describing them.
+      value: |
+        $
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+      description: |
+        And where that expectation comes from, if it comes from anywhere in
+        particular. A document, an issue, or a publication is worth naming;
+        so is "it seemed obvious", which is an honest answer.
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: The commit
+      description: The output of `git rev-parse HEAD` in the clone you ran.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: The toolchain and the platform
+      description: |
+        The output of `cargo --version` and `rustc --version`, and which
+        operating system. This workspace pins a toolchain, so a version that
+        is not the pinned one is itself worth knowing.
+      value: |
+        $ cargo --version
+
+        $ rustc --version
+
+        Operating system:
+    validations:
+      required: true
+
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else
+      description: Optional. Whether it reproduces, whether it started recently, anything you already ruled out.
+    validations:
+      required: false

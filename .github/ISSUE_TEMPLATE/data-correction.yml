@@ -1,0 +1,90 @@
+# A report that a digitised value in this repository disagrees with the
+# publication it was read from.
+#
+# Every field a reader would need to check the report themselves is required.
+# A correction that names no table and no page is a correction somebody has to
+# go looking for the source of, and the whole point of per-value citation is
+# that they do not have to.
+name: Data correction
+description: A digitised value disagrees with the publication it came from
+title: "Data correction: "
+labels: ["data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for a value in this repository that does not match its
+        source. If the value matches the source and you think the source is
+        wrong, that is a different report and does not belong here.
+
+  - type: input
+    id: identifier
+    attributes:
+      label: The identifier of the datum
+      description: As the file carries it, which is also the file name without its extension.
+      placeholder: rydberg-constant-2018-lkb
+    validations:
+      required: true
+
+  - type: input
+    id: file
+    attributes:
+      label: The file
+      description: The path in this repository, so the correction is a one-file diff.
+    validations:
+      required: true
+
+  - type: textarea
+    id: publication
+    attributes:
+      label: The publication
+      description: |
+        Enough to find the exact document: authors, title, journal or report
+        number, year, and a DOI where there is one. Not a link on its own; a
+        link rots and a citation does not.
+    validations:
+      required: true
+
+  - type: input
+    id: table
+    attributes:
+      label: The table and the page
+      description: Which table, which row, and which page of that publication the value is on.
+      placeholder: Table XX, row 7, page 043102-24
+    validations:
+      required: true
+
+  - type: textarea
+    id: disagreement
+    attributes:
+      label: What the file says and what the publication says
+      description: |
+        Both, written out, with the unit each is in. Include the uncertainty
+        and its form, absolute or relative, because a value that agrees and an
+        uncertainty that does not is still a correction.
+      value: |
+        The file says:
+
+        The publication says:
+    validations:
+      required: true
+
+  - type: textarea
+    id: reading
+    attributes:
+      label: How you read it
+      description: |
+        Whether you read the printed table, a machine-readable supplement, or
+        a value quoted somewhere else. Transcription is the failure mode this
+        project is built around, so how a number was obtained is part of the
+        report rather than an afterthought.
+    validations:
+      required: true
+
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else
+      description: Optional. Anything that would change how somebody reads the above.
+    validations:
+      required: false
