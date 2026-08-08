@@ -8,5 +8,11 @@
 //! It depends on no other member of this workspace, which is the strongest form
 //! of that boundary. Anything the solve needs to know arrives as a value.
 //!
-//! Empty for now. The solve is #56 through #63, and the file seam that lets a
-//! different fit read the same problem is #13.
+//! What is here is the file seam, #13: the shape of the problem file and of the
+//! result file, and the reader and writer for each. A document arrives as a
+//! string and leaves as a string, so the sentence above about opening files
+//! still holds, and the path belongs to the command line.
+//!
+//! The solve itself is #56 through #63 and is not written yet.
+
+pub mod seam;

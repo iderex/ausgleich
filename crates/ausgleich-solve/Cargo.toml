@@ -13,7 +13,18 @@ publish.workspace = true
 # and neither is possible for code that reads a directory on the way in. It also
 # keeps the file seam honest: the solver cannot see the loader, so the problem
 # file is the only route between them.
+#
+# One dependency from outside, and it is the same reader the record types use,
+# at the same version, for the reason written in that crate's manifest: a parser
+# this project maintains is a parser #37 owes a fuzz target for. It reads a
+# string and never a path, so the sentence in this crate's own documentation
+# about opening no file still holds.
+#
+# The writer is not this crate's, and the reason is in seam.rs. The seam is
+# judged on writing back the same bytes, which needs one canonical order and one
+# number format, and a serialiser free to choose either cannot promise them.
 [dependencies]
+toml = { version = "1.1.4", default-features = false, features = ["parse", "serde"] }
 
 # Warnings are errors here too. The levels are the workspace ones, in
 # [workspace.lints] at the root, so this member does not carry its own copy and

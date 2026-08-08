@@ -37,6 +37,9 @@ dependencies = [
 [[package]]
 name = "ausgleich-solve"
 version = "0.0.0"
+dependencies = [
+ "toml",
+]
 
 [[package]]
 name = "proc-macro2"
