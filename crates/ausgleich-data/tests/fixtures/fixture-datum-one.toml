@@ -1,0 +1,62 @@
+# An input datum, as one file holds it.
+#
+# Every value here is invented. The publication does not exist, the quantity
+# resolves to nothing, and no number was copied out of a real paper. That is
+# deliberate, for the same reason the two fixtures beside it say so: a fixture
+# carrying a real citation is a claim about a real publication that nobody
+# checked against the publication.
+#
+# The file name is part of the fixture rather than incidental to it. A record
+# file is named for the identifier it carries, so this file is
+# fixture-datum-one.toml because its identifier is fixture-datum-one, and the
+# rule refusing a disagreement between the two is proved against this name.
+#
+# The identifier is one of the two the correlation coefficient fixture names, so
+# the two fixtures describe one input set rather than two unrelated ones.
+#
+# The record's own fields sit in a table of their own and the provenance block
+# sits at the top level, where its own reader sees the same bytes it sees in any
+# other record. The block already owns the top-level name `uncertainty`, and a
+# datum has an uncertainty of its own, so a top-level field of that name would
+# be a second thing called uncertainty in one file. The table is what keeps them
+# apart.
+#
+# The unit is written as a symbol nobody here judges yet. What a unit means, and
+# whether it matches the quantity, is the table in #34.
+
+version = 1
+
+[datum]
+identifier = "fixture-datum-one"
+quantity = "fixture-quantity-one"
+unit = "hertz"
+value = 1234.5
+uncertainty = 0.02
+uncertainty_form = "absolute"
+enters_the_adjustment = true
+
+[publication]
+authors = ["Beispiel, A.", "Muster, B."]
+title = "A fixture standing in for a published input to a constants adjustment"
+venue = "Journal of Fixtures"
+year = 2019
+doi = "10.0000/fixture-input-datum"
+
+[read_from]
+locator = "Table II"
+page = 9
+
+[measurement]
+reported = 2018-11-05
+method = "kibble-balance"
+origin = "measured"
+
+[uncertainty]
+kind = "combined"
+coverage_factor = 1.0
+
+[digitisation]
+read_by = "Reader, A."
+read_on = 2026-02-11
+confirmed_by = "Checker, B."
+confirmed_on = 2026-02-13

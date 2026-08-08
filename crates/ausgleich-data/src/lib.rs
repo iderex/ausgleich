@@ -10,9 +10,10 @@
 //! can come to depend on a directory existing.
 //!
 //! What is here is the provenance block, #33, which is the part of every record
-//! that says where a number came from, and the correlation coefficient record
-//! that carries one, #31. The other record shapes are #30 and #32, the manifest
-//! is #35, and the units table is #34.
+//! that says where a number came from, the correlation coefficient record that
+//! carries one, #31, and the input datum record, #30. The remaining record
+//! shape is #32, the manifest is #35, and the units table is #34.
 
 pub mod coefficient;
+pub mod datum;
 pub mod provenance;
