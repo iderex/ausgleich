@@ -16,3 +16,17 @@
 //! The solve itself is #56 through #63 and is not written yet.
 
 pub mod seam;
+
+/// How many pieces a summation over the residuals is split into.
+///
+/// This is the shape
+/// `no_parallel_reduction_or_system_linear_algebra_in_the_solve_path` refuses,
+/// and this branch exists to show it refusing one. Splitting a sum by the
+/// number of cores the machine reports makes the order the partial sums are
+/// recombined in a fact about the machine, and floating-point addition is not
+/// associative, so the last digits move with it.
+pub fn summation_pieces() -> usize {
+    std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(1)
+}
