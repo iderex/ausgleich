@@ -143,6 +143,44 @@ fn no_hand_written_partial_derivative_in_the_linearisation_path() {
 }
 
 #[test]
+fn no_parallel_reduction_or_system_linear_algebra_in_the_solve_path() {
+    // #3 made enforceable as far as a pattern reaches. That decision asks for no
+    // parallel floating-point reduction anywhere in the solve path, a fixed
+    // summation order, and no system BLAS, because floating-point addition is
+    // not associative: a sum split across pieces and recombined in whatever
+    // order the pieces finished gives a different last digit each run. The
+    // failure is the quiet one. Nothing crashes, no test looks at the digits
+    // that moved, and the first symptom is two machines quoting different
+    // constants.
+    //
+    // Manifests are in scope alongside source, because a threading runtime or a
+    // linear algebra binding arrives as a dependency line before it arrives as
+    // a call.
+    //
+    // What this cannot see, and it is most of the decision. It reads names. A
+    // reduction parallelised through a crate named nothing like these, or a
+    // dependency that spawns threads two levels down, is invisible to it. So is
+    // a summation whose order follows the order values arrived in, which needs
+    // no thread at all to differ between two runs. The measurement that would
+    // catch those is #3's own Done-when, two runs compared byte for byte, and
+    // it needs a program that writes an output file. This is the half that can
+    // be had today, and it is the cheaper half.
+    refuse(
+        r"rayon|par_iter|par_chunks|par_bridge|par_sort|std::thread|thread::spawn|available_parallelism|num_cpus|\b[a-z_]*blas\b|\b[a-z_]*lapack\b|\bmkl\b",
+        &[
+            ":(glob)crates/ausgleich-solve/src/**/*.rs",
+            ":(glob)crates/ausgleich-equations/src/**/*.rs",
+            "crates/ausgleich-solve/Cargo.toml",
+            "crates/ausgleich-equations/Cargo.toml",
+        ],
+        "A parallel reduction, a thread count, or a system linear algebra \
+         library in the solve path. Floating-point addition is not associative, \
+         so a reduction whose order depends on how the work was split makes the \
+         digits this program prints a fact about the machine.",
+    );
+}
+
+#[test]
 fn no_network_call_outside_the_fetch_binary() {
     // #15 made enforceable. The program reads local files and writes local
     // files, in any build, with no flag that turns a request on. A tool that
