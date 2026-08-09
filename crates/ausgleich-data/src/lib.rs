@@ -11,11 +11,13 @@
 //!
 //! What is here is the provenance block, #33, which is the part of every record
 //! that says where a number came from, the correlation coefficient record that
-//! carries one, #31, the input datum record, #30, and the unit table with the
-//! dimensional check, #34. The remaining record shape is #32 and the manifest
-//! is #35.
+//! carries one, #31, the input datum record, #30, the unit table with the
+//! dimensional check, #34, and the adjusted constant record, #32, which is the
+//! one record that declares a dimension for the check to judge a unit against.
+//! The manifest is #35.
 
 pub mod coefficient;
+pub mod constant;
 pub mod datum;
 pub mod provenance;
 pub mod units;
