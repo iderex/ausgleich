@@ -181,6 +181,46 @@ fn no_parallel_reduction_or_system_linear_algebra_in_the_solve_path() {
 }
 
 #[test]
+fn no_normal_equations_and_no_repair_of_a_covariance_that_will_not_factor() {
+    // Two absences #2 and #56 state and nothing refused. They are one test
+    // rather than two because they are the same claim about the same crate:
+    // the solve path takes the problem as it is given and neither squares it
+    // nor mends it. Splitting them would be two changes to this file for one
+    // property, and one of them would land second and move the other.
+    //
+    // Forming the normal-equations matrix squares the condition number, and
+    // this problem is ill-conditioned by construction, so the digits are gone
+    // before the solve begins. Repairing a covariance that will not factor is
+    // worse than losing digits: an asserted coefficient that cannot hold
+    // together with its neighbours is a finding about a published table, and a
+    // diagonal quietly enlarged until the factorisation succeeds turns that
+    // finding into a run that looks ordinary.
+    //
+    // Both are the shape somebody adds in good faith. A ridge term or a nudged
+    // diagonal reads as a helpful fix for a crash to a reader who has not read
+    // those two issues, which is why the refusal names them.
+    //
+    // The bound, and it is the same one every pattern here carries. It reads
+    // the names such a function is given, so a formation or a repair written
+    // inline with no telling name walks through it. What would catch that is a
+    // reader, and the second half of #56 is the fixture that proves the refusal
+    // fires rather than the pattern that proves nothing was written.
+    //
+    // The names are written as identifier fragments and not as words, because
+    // the file this protects argues in prose that it does none of these things.
+    // A pattern over the words would be refused by the paragraph saying the
+    // code does not do what the pattern refuses.
+    refuse(
+        r"normal_equations|gram_matrix|a_transpose_a|nudge_|_nudge|add_to_diagonal|make_positive_definite|nearest_positive|shrink_toward|regularis|regulariz|jitter",
+        &[":(glob)crates/ausgleich-solve/src/**/*.rs"],
+        "The normal-equations matrix, or a repair of a covariance that will not \
+         factor, in the solve path. The problem is whitened and solved as it \
+         stands: a covariance that cannot be factored is a finding about the \
+         input data and not a matrix to mend.",
+    );
+}
+
+#[test]
 fn no_network_call_outside_the_fetch_binary() {
     // #15 made enforceable. The program reads local files and writes local
     // files, in any build, with no flag that turns a request on. A tool that
