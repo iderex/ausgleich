@@ -1,0 +1,34 @@
+# An adjusted constant, as one file holds it.
+#
+# Every value here is invented. The publication does not exist, the symbol
+# stands for nothing, and no number was copied out of a real paper. That is
+# deliberate, for the same reason the fixtures beside it say so: a fixture
+# carrying a real citation is a claim about a real publication that nobody
+# checked against the publication.
+#
+# The identifier is the quantity the input datum fixture names, so the fixtures
+# in this directory describe one input set rather than several unrelated ones.
+# The file is named for that identifier, which is the rule a record file follows
+# and which is proved against this name.
+#
+# The unit is written as one of the symbols the committed unit table carries,
+# because this record's unit is judged against that table. The dimension beside
+# it is what the unit is checked for agreeing with, and a file writing a unit of
+# one dimension under the declaration of another is refused.
+#
+# The starting value has its source with it. The fit is nonlinear and starts
+# from this number, so a reader who suspects the answer of having been assumed
+# is told where the assumption came from.
+
+version = 1
+
+[constant]
+identifier = "fixture-quantity-one"
+symbol = "X_f"
+unit = "Hz"
+dimension = "frequency"
+exact_by_definition = false
+
+[starting_value]
+value = 1234.5
+source = "Table IV of the fixture publication standing in for a published adjustment"
