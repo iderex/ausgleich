@@ -4,4 +4,10 @@
 # What a local `cargo mutants` writes beside the tree, #63. It is a run's own
 # working output, and the verdict is the run's exit status rather than anything
 # left in here.
+#
+# Both names, because a second run renames the first run's directory rather than
+# overwriting it. Ignoring only the first name leaves the rotated copy tracked,
+# which is thirty thousand lines of a tool's logs arriving in a commit nobody
+# meant to make.
 /mutants.out
+/mutants.out.old
