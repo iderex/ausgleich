@@ -692,6 +692,35 @@ fn an_iteration_count_below_zero_is_refused() {
 }
 
 #[test]
+fn an_iteration_count_of_zero_is_read_rather_than_refused() {
+    // The boundary the refusal above sits on, and the reason it is here is the
+    // mutation run in #63 rather than a reading of the source: with only the
+    // negative case tested, widening `< 0` to `<= 0` changed nothing any test
+    // could see. A count of zero is a fit that was asked for and took no step,
+    // which is a thing a run can honestly report, and refusing it would turn a
+    // legitimate result file into an unreadable one.
+    let result = read_solution(&result_with("iterations = 3", "iterations = 0")).expect("reads");
+    assert_eq!(result.convergence().iterations(), 0);
+}
+
+#[test]
+fn a_fit_that_did_not_converge_is_read_as_one_that_did_not() {
+    // Also from #63. Every other test here reads the canonical result, which
+    // says the fit converged, so nothing distinguished this field from a
+    // constant that is always true. The field is the whole difference between
+    // a fit that met its criterion and one that spent its budget, and a reader
+    // that always says it converged reports the second as the first.
+    let result =
+        read_solution(&result_with("converged = true", "converged = false")).expect("reads");
+    assert!(!result.convergence().converged());
+    // The iteration count and the final step are still what the file said, so
+    // this is a document that did not converge rather than a document nothing
+    // was read out of.
+    assert_eq!(result.convergence().iterations(), 3);
+    assert_eq!(result.convergence().final_step(), 0.5);
+}
+
+#[test]
 fn a_convergence_record_that_does_not_say_whether_it_converged_is_refused() {
     let refusal = result_refusal(&result_with("converged = true\n", ""));
     assert_eq!(refusal.to_string(), "the file has no convergence.converged");

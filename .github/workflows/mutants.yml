@@ -1,0 +1,87 @@
+# Mutation testing on the solver crate, #63.
+#
+# Why this crate and not the tree. Numerical code passes tests that prove almost
+# nothing: a comparison flipped, an index off by one, a factor of two, a sign in
+# a covariance term, and the fit still converges to something plausible.
+# Coverage cannot see any of that. The floor in coverage-floor.json is at a
+# hundred percent of lines and regions, and the two mutants this check found on
+# the commit that added it were both inside code that floor already called
+# covered. A hundred percent coverage and a surviving mutant in one crate is the
+# ordinary case rather than a contradiction, which is the clearest statement of
+# why one check does not replace the other.
+#
+# What the verdict is. cargo-mutants exits non-zero when a mutant survives, so
+# the pass condition is that none does. There is no threshold in this file and
+# none in the configuration: a survivor cannot be admitted by widening a number,
+# only by killing it with a test or by an argument somebody writes down.
+#
+# There is no register of accepted survivors, and that is a statement about
+# today rather than a design. The survivor list is empty at the commit that
+# added this check, so a file listing survivors and their reasons would be a
+# file with no entries and a test over it would examine nothing. When the first
+# survivor arrives that is genuinely not worth killing, that is the change that
+# creates the register, and it will have an entry to prove itself against.
+#
+# What the scope and the budget are is in .cargo/mutants.toml rather than in the
+# arguments below, so a contributor's own `cargo mutants` is the same instrument
+# as this job. The comments there say why each number is what it is.
+name: Mutants
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Read-only. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutants:
+    runs-on: ubuntu-latest
+    # The whole run is bounded here as well as per mutant. The run this check
+    # was written against took three minutes for 116 mutants on a developer
+    # machine at six jobs, so a limit of thirty leaves room for a slower runner
+    # and for the crate to grow, and still fails rather than occupying a runner
+    # if something hangs in a way the per-mutant timeout does not catch.
+    timeout-minutes: 30
+    env:
+      # Pinned for the reason the coverage job pins its tool. A mutation run is
+      # a measuring device: which mutants it generates is a property of the
+      # version, so an unpinned tool would make a survivor appearing between two
+      # runs indistinguishable from a survivor appearing because the tool
+      # learned a new mutation.
+      MUTANTS_VERSION: "27.1.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Show the toolchain the pin resolved to
+        run: cargo --version
+
+      # Built here rather than fetched by a third-party action, which is the
+      # rule the coverage job states: this repository takes no action it did not
+      # pin and no installer it did not name, and the cost is the minutes it
+      # takes to compile.
+      - name: Install the mutation tool
+        run: |
+          set -euo pipefail
+          cargo install cargo-mutants --locked --version "$MUTANTS_VERSION"
+          cargo mutants --version
+
+      # Two jobs, because a hosted runner has two cores and the per-mutant
+      # timeout is a multiple of a baseline measured on the same machine, so
+      # oversubscribing would stretch every mutant's own budget.
+      #
+      # No artefact is uploaded. The run prints how many mutants it generated,
+      # how many it caught and the source line of every one it missed, so the
+      # log already carries both halves: what a red run is about, and the count
+      # that says a green run examined something rather than nothing.
+      - name: Mutate the solver and refuse a survivor
+        run: cargo mutants --jobs 2
