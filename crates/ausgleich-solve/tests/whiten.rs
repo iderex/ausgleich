@@ -123,17 +123,23 @@ fn the_factor_times_its_own_transpose_is_the_covariance_again() {
     // built by choosing the factor first and multiplying it out by hand:
     //
     //   L = [[ 2, 0, 0],
-    //        [ 1, 2, 0],
-    //        [-1, 3, 1]]
+    //        [ 3, 2, 0],
+    //        [-1, 4, 1]]
     //
-    //   L * L^T = [[ 4, 2, -2],
-    //              [ 2, 5,  5],
-    //              [-2, 5, 11]]
+    //   L * L^T = [[ 4,  6, -2],
+    //              [ 6, 13,  5],
+    //              [-2,  5, 18]]
     //
     // so the factorisation has one right answer and it is L. A sign flipped
     // anywhere in the inner sum moves at least one entry of it.
+    //
+    // No entry of L below the diagonal is 1, and that is chosen rather than
+    // incidental. The one term this fixture drives through the inner sum is
+    // `mine[0] * done[0]`, and with a 1 in it multiplication and division agree,
+    // so the arithmetic the sum exists for would go unexamined by a fixture that
+    // otherwise looks complete. A mutation run found exactly that.
     let text = problem_with(
-        "[[4.0, 2.0, -2.0], [2.0, 5.0, 5.0], [-2.0, 5.0, 11.0]]",
+        "[[4.0, 6.0, -2.0], [6.0, 13.0, 5.0], [-2.0, 5.0, 18.0]]",
         "[[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]",
     )
     .replace(
@@ -148,8 +154,8 @@ fn the_factor_times_its_own_transpose_is_the_covariance_again() {
         found.factor(),
         [
             vec![2.0, 0.0, 0.0],
-            vec![1.0, 2.0, 0.0],
-            vec![-1.0, 3.0, 1.0],
+            vec![3.0, 2.0, 0.0],
+            vec![-1.0, 4.0, 1.0],
         ]
     );
 }
