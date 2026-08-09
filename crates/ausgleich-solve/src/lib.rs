@@ -13,6 +13,10 @@
 //! string and leaves as a string, so the sentence above about opening files
 //! still holds, and the path belongs to the command line.
 //!
-//! The solve itself is #56 through #63 and is not written yet.
+//! Also here is the factorisation and the whitening, #56: the covariance comes
+//! out of the problem as a factor, and the observation vector and the design
+//! matrix are whitened with it. The solve that is handed the result is #57 and
+//! is not written yet.
 
 pub mod seam;
+pub mod whiten;
