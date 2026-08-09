@@ -1,0 +1,38 @@
+# What the mutation run mutates and what it is allowed to cost, #63.
+#
+# It lives in a file rather than in the arguments of one workflow step, for the
+# reason coverage-floor.json gives about the coverage floor: an argument in a
+# workflow is a number somebody widens in the same commit as the change that
+# needed it widened, and the diff shows a workflow edit rather than a decision.
+# It also makes a contributor's own `cargo mutants` the same instrument as the
+# gate's, so a survivor found locally is the survivor the gate reports.
+#
+# What is deliberately not here is the verdict. Whether a surviving mutant fails
+# the run is the tool's exit status and not a threshold in this file, so there
+# is no number to raise when one appears.
+
+# The solver crate and nothing else, which is #63's scope. The reason is in that
+# issue: numerical code passes tests that prove almost nothing, and coverage
+# cannot see a flipped comparison or a sign in a covariance term. The rest of
+# the workspace is not exempted because it is trusted, it is out of scope, and
+# widening the scope is an edit to this line with a reason beside it.
+examine_globs = ["crates/ausgleich-solve/src/**/*.rs"]
+
+# Only that crate's own tests decide whether a mutant lived. Running the whole
+# workspace against every mutant would spend most of the budget compiling and
+# running suites that cannot observe the mutated code, and it would let a test
+# in another crate be the thing that kills a mutant in this one, which is a
+# dependency #63 does not want and the crate layout was chosen to prevent.
+test_package = ["ausgleich-solve"]
+
+# The budget. cargo-mutants times the unmutated run first and allows each
+# mutant a multiple of it, so these are relative to what the suite actually
+# costs rather than absolute numbers that go stale. A mutant that hangs is
+# reported as a timeout rather than running until the job's own limit.
+#
+# The floor exists because the baseline test run here is a few seconds, and a
+# multiple of a few seconds is short enough that an ordinarily slow runner
+# would be recorded as a hang.
+timeout_multiplier = 5.0
+minimum_test_timeout = 60
+build_timeout_multiplier = 5.0

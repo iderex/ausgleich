@@ -1,2 +1,7 @@
 # Build output. Nothing under it is ever tracked.
 /target
+
+# What a local `cargo mutants` writes beside the tree, #63. It is a run's own
+# working output, and the verdict is the run's exit status rather than anything
+# left in here.
+/mutants.out
