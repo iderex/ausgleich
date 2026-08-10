@@ -295,6 +295,127 @@ fn a_correlation_over_three_rows_takes_more_than_one_pass_to_settle() {
     );
 }
 
+/// The design `[[1, 1], [0, delta]]`, whose two columns close on each other as
+/// `delta` falls.
+///
+/// One family for the two cases below, so the shape they argue about is written
+/// once. The covariance is the identity, so the whitened design is the design
+/// in the file and every number below is about the matrix as it is written.
+fn nearly_degenerate(delta: f64) -> String {
+    two_by_two(IDENTITY, &format!("[[1.0, 1.0], [0.0, {delta}]]"))
+}
+
+/// The larger eigenvalue of that family's cross-product, from the algebra.
+///
+/// For `A = [[1, 1], [0, d]]` the cross-product is `[[1, 1], [1, 1 + d^2]]`,
+/// whose trace is `2 + d^2` and whose determinant is `d^2`. The eigenvalues are
+/// the roots of `x^2 - (2 + d^2) x + d^2`, and the discriminant works out as
+/// `(2 + d^2)^2 - 4 d^2`, which is `4 + d^4`. So the larger root is
+/// `((2 + d^2) + sqrt(4 + d^4)) / 2`.
+///
+/// This is arithmetic the routine under test does not do: it turns pairs of
+/// columns and reads their lengths, and never forms the cross-product this
+/// polynomial comes from. That is what makes it an independent answer rather
+/// than the same computation written twice.
+fn larger_eigenvalue(delta: f64) -> f64 {
+    ((2.0 + delta * delta) + (4.0 + delta * delta * delta * delta).sqrt()) / 2.0
+}
+
+/// The condition number of that family, from the same algebra.
+///
+/// The two singular values multiply to the absolute determinant of a square
+/// matrix, which is `d` here, so the smaller one is `d` over the larger and the
+/// ratio of the two is the larger eigenvalue over `d`.
+///
+/// Written this way rather than as the ratio of the two roots on purpose. The
+/// smaller root is a difference of two nearly equal numbers as `d` falls, so
+/// computing it from the polynomial loses the digits the case is about, while
+/// the determinant reaches it with a division and no subtraction at all.
+fn condition_number(delta: f64) -> f64 {
+    larger_eigenvalue(delta) / delta
+}
+
+#[test]
+fn two_columns_at_an_angle_are_conditioned_by_the_algebra_and_not_by_their_lengths() {
+    // Every design case above has columns that are already orthogonal, or two
+    // that are the same. Both are shapes the turn does not have to get right:
+    // an orthogonal pair is skipped, and a repeated column drives the smaller
+    // length to zero from any angle that separates them at all. So none of them
+    // says the angle produces the right numbers on a pair that is neither.
+    //
+    // Here the columns are (1, 0) and (1, 1), at forty five degrees, and the
+    // lengths of the columns as they stand are one and the square root of two.
+    // Those are not the singular values, and a routine reporting the columns
+    // untouched would say the condition number is 1.414 rather than 2.618.
+    //
+    // With d at one the larger eigenvalue is (3 + sqrt 5) / 2 and the
+    // determinant is one, so the singular values are its square root and the
+    // reciprocal of that, and the condition number is (3 + sqrt 5) / 2 again.
+    let found = conditioning_of(&nearly_degenerate(1.0));
+
+    let larger = larger_eigenvalue(1.0);
+    close_enough(found.design_singular_values()[0], larger.sqrt());
+    close_enough(found.design_singular_values()[1], 1.0 / larger.sqrt());
+    close_enough(
+        found.design_condition_number(),
+        (3.0 + 5.0_f64.sqrt()) / 2.0,
+    );
+    // One pair, so one turn settles it and the pass after finds nothing to do.
+    assert_eq!(found.design_sweeps(), 2);
+}
+
+#[test]
+fn the_condition_number_rises_as_the_two_parameters_close_on_each_other() {
+    // #62 asks for a badly conditioned case built by making two parameters
+    // nearly degenerate, and for the condition number #56 reports to rise. The
+    // family is the one above with d falling: at d of zero the two columns are
+    // the same vector, so the design says nothing that tells the two parameters
+    // apart, and the approach to that is what a reader is being shown.
+    //
+    // The relation is written down before the run rather than read off it. The
+    // condition number is the larger eigenvalue over d, and the larger
+    // eigenvalue tends to two as d falls, so the number grows like 2/d and each
+    // quartering of d roughly quadruples it. The exact value at each step is
+    // the algebra above, and the assertion is against that rather than against
+    // a shape.
+    //
+    // The family is walked from the largest d down, and each step has to be
+    // strictly worse than the one before it. That direction only holds below
+    // the square root of two, where the two columns are closer to each other
+    // than the turn's own reach; above it the same expression rises again as
+    // the second column lengthens, and a case built there would be arguing
+    // about length rather than about degeneracy. Every d here is well inside
+    // that bound and is exact in binary, so the document carries the number the
+    // algebra used.
+    let mut worse_than = 0.0_f64;
+    for delta in [1.0, 0.25, 0.0625, 0.015625] {
+        let found = conditioning_of(&nearly_degenerate(delta));
+
+        close_enough(found.design_condition_number(), condition_number(delta));
+        close_enough(
+            found.design_singular_values()[1],
+            delta / larger_eigenvalue(delta).sqrt(),
+        );
+        assert!(
+            found.design_condition_number() > worse_than,
+            "at d of {delta} the condition number came out as {}, which is not \
+             worse than the {worse_than} the wider case reported",
+            found.design_condition_number(),
+        );
+        assert!(
+            found.design_sweeps() < ausgleich_solve::conditioning::SWEEPS,
+            "at d of {delta} the rotations ran out of passes, so the numbers \
+             above are where they were stopped rather than where they settled",
+        );
+        worse_than = found.design_condition_number();
+    }
+    // The last step of the walk, stated as a number so the loop cannot pass by
+    // never running. At d of one sixty fourth the columns are about a degree
+    // apart and the condition number is a hundred and twenty eight, against the
+    // 2.618 the first step reported.
+    close_enough(worse_than, condition_number(0.015625));
+}
+
 #[test]
 fn the_singular_values_come_out_largest_first() {
     // The other end from the eigenvalues, and for the same reason: the largest
