@@ -6,10 +6,13 @@
 # matching its author, which is how the author asserts Developer Certificate of
 # Origin 1.1. Fail-closed: any unsigned commit reds the check.
 #
-# The DCO text and a contributor guide are not in this tree yet, which is #26.
-# Until they land this comment and the failure message name the version instead
-# of a path, because a pointer to a file that is not there teaches a reader to
-# stop following pointers.
+# The DCO text is in this tree, at ./DCO, unmodified. A contributor guide is
+# not, and both are #26. The failure message names the version and the path,
+# because the path resolves and a contributor who cannot open what the trailer
+# asserts is taking it on trust.
+#
+# What the trailer still cannot point at is a project license. #16 entry 1 holds
+# that open, and Cargo.toml records what follows from it beside `publish = false`.
 name: DCO
 
 on:
@@ -80,7 +83,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::One or more commits lack a DCO Signed-off-by matching the author. Sign your work with 'git commit -s' (or add it retroactively with 'git rebase --signoff <base>'). The text the trailer asserts is Developer Certificate of Origin 1.1."
+            echo "::error::One or more commits lack a DCO Signed-off-by matching the author. Sign your work with 'git commit -s' (or add it retroactively with 'git rebase --signoff <base>'). The text the trailer asserts is Developer Certificate of Origin 1.1, in ./DCO at the root of this repository."
             exit 1
           fi
           echo "All commits carry a matching DCO sign-off."
