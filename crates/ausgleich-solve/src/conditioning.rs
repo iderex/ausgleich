@@ -33,9 +33,18 @@
 //! never squared into another matrix. Each rotation reads three sums over one
 //! pair of columns and writes the pair back. That the singular values so
 //! obtained keep their relative accuracy is a claim, made from the shape of the
-//! algorithm and not from a measurement in this tree; no comparison against an
-//! independent computation of the same numbers exists here, and #62 is where
-//! one would live.
+//! algorithm and not from a measurement in this tree.
+//!
+//! What the suite does compare, and what it does not, since the difference is
+//! the whole of what stands behind the numbers above. The design cases in
+//! `tests/conditioning.rs` check one family against an answer reached by other
+//! arithmetic: the roots of the characteristic polynomial of a two column
+//! design's cross-product, a matrix nothing here forms. That says the routine
+//! arrives at the right numbers on the shapes it is handed. It is one family at
+//! three rows or fewer, so it says nothing about how the error behaves at the
+//! size of a real adjustment, and nothing about the accuracy claim above, which
+//! is about the digits a small singular value keeps rather than about agreement
+//! on a case somebody chose. #62 is where the rest of that lives.
 //!
 //! Nothing here refuses anything, and that is deliberate. A covariance that
 //! cannot hold together is refused in [`crate::whiten`], before this module is

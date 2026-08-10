@@ -4,15 +4,24 @@
 //! is written next to the case that uses it, rather than being whatever the
 //! code produced on the day.
 //!
-//! Most of the cases compare for equality, because their covariance and design
+//! Some of the cases compare for equality, because their covariance and design
 //! were chosen so that every square root and every division in them is exact in
-//! binary floating point. Two cannot be: an eigenvalue of one and six tenths is
-//! not a binary fraction, and no correlation coefficient makes both the
-//! coefficient and the factor entry beside it exact, since that would need two
-//! binary fractions whose squares sum to one. Those carry a bound of a few units
-//! in the last place, which is what a handful of roundings can cost, and not a
-//! number read off the output: a routine computing something other than these
-//! numbers misses by a margin nothing like that size.
+//! binary floating point. Others cannot be, for two different reasons, and the
+//! reasons rather than a count of the cases, because a count in a comment drifts
+//! against the cases below it.
+//!
+//! One is the correlated covariance: an eigenvalue of one and six tenths is not
+//! a binary fraction, and no correlation coefficient makes both the coefficient
+//! and the factor entry beside it exact, since that would need two binary
+//! fractions whose squares sum to one. The other is a design whose columns are
+//! neither orthogonal nor the same, where the singular values are roots of a
+//! quadratic and are irrational for every choice of the entries that is worth
+//! making a case out of.
+//!
+//! Those carry a bound of a few units in the last place, which is what a handful
+//! of roundings can cost, and not a number read off the output: a routine
+//! computing something other than these numbers misses by a margin nothing like
+//! that size.
 //!
 //! The pass counts are asserted as hard as the numbers are, and they are the
 //! leg that says the rotation angle is the right one. The singular values of a
