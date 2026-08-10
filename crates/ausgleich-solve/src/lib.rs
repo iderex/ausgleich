@@ -17,6 +17,12 @@
 //! out of the problem as a factor, and the observation vector and the design
 //! matrix are whitened with it. The solve that is handed the result is #57 and
 //! is not written yet.
+//!
+//! Beside it are the two numbers #56 asks a run to print about the whitened
+//! problem, the smallest eigenvalue of the correlation matrix and the condition
+//! number of the whitened design matrix. They are computed here and printed
+//! nowhere, because there is no run in this workspace to print them into.
 
+pub mod conditioning;
 pub mod seam;
 pub mod whiten;
