@@ -42,3 +42,9 @@ dependency that could make one, anywhere in this workspace outside that separate
 fetch program. It runs on every change, and the branch
 `fixture/23-network-call` is a deliberate violation kept around to show it
 failing.
+
+## License
+
+AGPL-3.0, copyright 2026 Nils Lehnen.
+
+The full text is in [LICENSE](LICENSE).
